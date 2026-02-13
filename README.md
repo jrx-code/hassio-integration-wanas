@@ -1,27 +1,3 @@
-```
-    ╔══════════════════════════════════════════════════════════╗
-    ║  ██╗    ██╗ █████╗ ███╗   ██╗ █████╗ ███████╗          ║
-    ║  ██║    ██║██╔══██╗████╗  ██║██╔══██╗██╔════╝          ║
-    ║  ██║ █╗ ██║███████║██╔██╗ ██║███████║███████╗          ║
-    ║  ██║███╗██║██╔══██║██║╚██╗██║██╔══██║╚════██║          ║
-    ║  ╚███╔███╔╝██║  ██║██║ ╚████║██║  ██║███████║          ║
-    ║   ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝          ║
-    ║                                                          ║
-    ║  R E K U P E R A T O R   C O N T R O L   S Y S T E M   ║
-    ║──────────────────────────────────────────────────────────║
-    ║                                                          ║
-    ║   ┌─────────┐  SUPPLY   >>>  23.4°C   FAN: ████░░ 3    ║
-    ║   │  ~~~~~  │  EXHAUST  <<<  18.7°C   FAN: ███░░░ 2    ║
-    ║   │  ┌───┐  │  OUTDOOR       -2.1°C                    ║
-    ║   │  │ ⌂ │  │  INDOOR        21.5°C   BYPASS:  [ON ]   ║
-    ║   │  └───┘  │  CURRENT       22.0°C   HEATER:  [OFF]   ║
-    ║   │  ~~~~~  │                          FILTER:  47d     ║
-    ║   └─────────┘                                           ║
-    ║                                                          ║
-    ║  [STATUS: CONNECTED]          ░░░░░░░░░░░░░░  MODBUS   ║
-    ╚══════════════════════════════════════════════════════════╝
-```
-
 # Wanas Rekuperator — Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
@@ -32,6 +8,7 @@ Full control of your **Wanas recuperator** directly from Home Assistant via **Mo
 
 Monitor temperatures, airflow, fan speeds, filter status — and toggle bypass, heater, cooler, humidifier, vacation mode, fireplace, and party mode — all from your dashboard.
 
+![Wanas-pip-boy](https://github.com/jrx-code/hassio-integration-wanas/blob/main/images/pip-boy.jpg)
 ---
 
 ## Features

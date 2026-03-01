@@ -5,8 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolumeFlowRate
+from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime, UnitOfVolumeFlowRate
 
 DOMAIN = "wanas"
 
@@ -53,6 +54,16 @@ class WanasSensorDescription:
 
 
 @dataclass(frozen=True)
+class WanasBinarySensorDescription:
+    """Describes a Wanas binary sensor."""
+
+    key: str
+    name: str
+    address: int
+    device_class: BinarySensorDeviceClass | None = None
+
+
+@dataclass(frozen=True)
 class WanasSwitchDescription:
     """Describes a Wanas switch."""
 
@@ -62,6 +73,20 @@ class WanasSwitchDescription:
     verify_address: int
     on_value: int = 1
     off_value: int = 0
+
+
+@dataclass(frozen=True)
+class WanasNumberDescription:
+    """Describes a Wanas number entity."""
+
+    key: str
+    name: str
+    write_address: int
+    verify_address: int
+    min_value: float = 0
+    max_value: float = 255
+    step: float = 1
+    unit: str | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[WanasSensorDescription, ...] = (
@@ -140,65 +165,58 @@ SENSOR_DESCRIPTIONS: tuple[WanasSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WanasSensorDescription(
-        key="bypass_state",
-        name="Bypass State",
-        address=31,
-    ),
-    WanasSensorDescription(
-        key="humidifier_state",
-        name="Humidifier State",
-        address=32,
-    ),
-    WanasSensorDescription(
-        key="heater_state",
-        name="Heater State",
-        address=33,
-    ),
-    WanasSensorDescription(
-        key="cooler_state",
-        name="Cooler State",
-        address=34,
-    ),
-    WanasSensorDescription(
-        key="vacation_mode",
-        name="Vacation Mode",
-        address=35,
-    ),
-    WanasSensorDescription(
         key="filter_replacement",
         name="Filter Replacement",
         address=36,
         unit=UnitOfTime.DAYS,
     ),
     WanasSensorDescription(
-        key="party_time",
-        name="Party Time",
-        address=45,
-        data_type=RegisterDataType.INT16,
-        scale=0.17,
-        unit=UnitOfTime.MINUTES,
+        key="system_errors",
+        name="System Errors",
+        address=37,
     ),
-    WanasSensorDescription(
-        key="fan_speed_1",
-        name="Fan Speed 1",
-        address=46,
-        data_type=RegisterDataType.INT16,
+)
+
+BINARY_SENSOR_DESCRIPTIONS: tuple[WanasBinarySensorDescription, ...] = (
+    WanasBinarySensorDescription(
+        key="gwc_state",
+        name="GWC State",
+        address=30,
     ),
-    WanasSensorDescription(
-        key="fan_speed_3",
-        name="Fan Speed 3",
-        address=47,
-        data_type=RegisterDataType.INT16,
+    WanasBinarySensorDescription(
+        key="bypass_state",
+        name="Bypass State",
+        address=31,
     ),
-    WanasSensorDescription(
-        key="hood_state",
-        name="Hood State",
-        address=48,
-        data_type=RegisterDataType.INT16,
+    WanasBinarySensorDescription(
+        key="humidifier_state",
+        name="Humidifier State",
+        address=32,
+    ),
+    WanasBinarySensorDescription(
+        key="heater_state",
+        name="Heater State",
+        address=33,
+    ),
+    WanasBinarySensorDescription(
+        key="cooler_state",
+        name="Cooler State",
+        address=34,
+    ),
+    WanasBinarySensorDescription(
+        key="vacation_mode",
+        name="Vacation Mode",
+        address=35,
     ),
 )
 
 SWITCH_DESCRIPTIONS: tuple[WanasSwitchDescription, ...] = (
+    WanasSwitchDescription(
+        key="gwc",
+        name="GWC",
+        write_address=38,
+        verify_address=30,
+    ),
     WanasSwitchDescription(
         key="bypass",
         name="Bypass",
@@ -224,25 +242,63 @@ SWITCH_DESCRIPTIONS: tuple[WanasSwitchDescription, ...] = (
         verify_address=34,
     ),
     WanasSwitchDescription(
+        key="hood",
+        name="Hood",
+        write_address=48,
+        verify_address=48,
+    ),
+)
+
+NUMBER_DESCRIPTIONS: tuple[WanasNumberDescription, ...] = (
+    WanasNumberDescription(
         key="vacation",
         name="Vacation",
         write_address=43,
         verify_address=35,
-        on_value=30,
+        min_value=0,
+        max_value=255,
+        step=1,
+        unit=UnitOfTime.DAYS,
     ),
-    WanasSwitchDescription(
+    WanasNumberDescription(
         key="fireplace",
         name="Fireplace",
         write_address=44,
         verify_address=44,
-        on_value=180,
+        min_value=0,
+        max_value=240,
+        step=1,
+        unit=UnitOfTime.MINUTES,
     ),
-    WanasSwitchDescription(
+    WanasNumberDescription(
         key="party",
         name="Party",
         write_address=45,
         verify_address=45,
-        on_value=720,
+        min_value=0,
+        max_value=240,
+        step=1,
+        unit=UnitOfTime.MINUTES,
+    ),
+    WanasNumberDescription(
+        key="fan_speed_1",
+        name="Fan Speed 1",
+        write_address=46,
+        verify_address=46,
+        min_value=0,
+        max_value=100,
+        step=1,
+        unit=PERCENTAGE,
+    ),
+    WanasNumberDescription(
+        key="fan_speed_3",
+        name="Fan Speed 3",
+        write_address=47,
+        verify_address=47,
+        min_value=0,
+        max_value=100,
+        step=1,
+        unit=PERCENTAGE,
     ),
 )
 
@@ -251,7 +307,12 @@ def get_default_registers() -> dict[str, int]:
     regs: dict[str, int] = {}
     for desc in SENSOR_DESCRIPTIONS:
         regs[f"{desc.key}_address"] = desc.address
+    for desc in BINARY_SENSOR_DESCRIPTIONS:
+        regs[f"{desc.key}_address"] = desc.address
     for desc in SWITCH_DESCRIPTIONS:
+        regs[f"{desc.key}_write_address"] = desc.write_address
+        regs[f"{desc.key}_verify_address"] = desc.verify_address
+    for desc in NUMBER_DESCRIPTIONS:
         regs[f"{desc.key}_write_address"] = desc.write_address
         regs[f"{desc.key}_verify_address"] = desc.verify_address
     return regs
@@ -263,7 +324,14 @@ def get_default_register_config() -> dict[str, int | str]:
     for desc in SENSOR_DESCRIPTIONS:
         regs[f"{desc.key}_name"] = desc.name
         regs[f"{desc.key}_address"] = desc.address
+    for desc in BINARY_SENSOR_DESCRIPTIONS:
+        regs[f"{desc.key}_name"] = desc.name
+        regs[f"{desc.key}_address"] = desc.address
     for desc in SWITCH_DESCRIPTIONS:
+        regs[f"{desc.key}_name"] = desc.name
+        regs[f"{desc.key}_write_address"] = desc.write_address
+        regs[f"{desc.key}_verify_address"] = desc.verify_address
+    for desc in NUMBER_DESCRIPTIONS:
         regs[f"{desc.key}_name"] = desc.name
         regs[f"{desc.key}_write_address"] = desc.write_address
         regs[f"{desc.key}_verify_address"] = desc.verify_address

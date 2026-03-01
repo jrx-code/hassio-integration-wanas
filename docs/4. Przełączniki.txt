@@ -1,0 +1,12 @@
+Nazwa encji,Adres,Typ,Zakres / Wartości
+Tryb GWC,38,R/W,"1: Wymuś załączenie GWC, 0: Wyłącz "
+Tryb Bypass,39,R/W,"1: Wymuś otwarcie, 0: Tryb auto "
+Tryb Nawilżacz,40,R/W,"1: Aktywuj nawilżanie, 0: Wyłącz "
+Tryb Nagrzewnica,41,R/W,"1: Aktywuj grzanie, 0: Wyłącz "
+Tryb Chłodnica,42,R/W,"1: Aktywuj chłodzenie, 0: Wyłącz "
+Tryb Urlop,43,R/W,"1-255: Czas trwania w dniach, 0: Wyłącz +1"
+Tryb Kominek,44,R/W,"1-240: Czas trwania w minutach, 0: Wyłącz "
+Tryb Impreza,45,R/W,"1-240: Czas trwania w minutach, 0: Wyłącz "
+Moc Biegu 1,46,R/W,Nastawa wydajności (0-100%)
+Moc Biegu 3,47,R/W,Nastawa wydajności (0-100%)
+Tryb Okap,48,R/W,"1: Aktywuj (wymusza nadciśnienie), 0: Wyłącz "

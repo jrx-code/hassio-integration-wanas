@@ -1,0 +1,8 @@
+1. Parametry komunikacji (Wymagane do konfiguracji)
+
+Protokół: Modbus RTU (Half-duplex).
+Prędkość (Baud rate): 19200 b/s (domyślnie, rejestr 25).
+Parzystość: Even (Parzysty, rejestr 26).
+Bity danych: 8.
+Bity stopu: 1.
+Adres urządzenia: 1.

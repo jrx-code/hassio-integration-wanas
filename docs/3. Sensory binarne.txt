@@ -1,0 +1,8 @@
+Nazwa encji,Adres,Opis
+Status GWC,30,Informacja o pracy gruntowego wymiennika ciepła
+Status Bypass,31,Informacja o otwarciu przepustnicy bypassu
+Status Nawilżacz,32,Status pracy modułu nawilżania
+Status Nagrzewnica,33,Status pracy nagrzewnicy wtórnej
+Status Chłodnica,34,Status pracy chłodnicy
+Status Urlop,35,Informacja czy tryb urlopowy jest w toku
+Błędy systemu,37,Rejestr binarny (wymaga mapowania bitowego błędów)

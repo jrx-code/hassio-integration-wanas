@@ -1,17 +1,15 @@
-"""Switch platform for Wanas integration."""
+"""Number platform for Wanas integration."""
 
 from __future__ import annotations
 
-from typing import Any
-
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SWITCH_DESCRIPTIONS, WanasSwitchDescription
+from .const import DOMAIN, NUMBER_DESCRIPTIONS, WanasNumberDescription
 from .coordinator import WanasCoordinator
 
 
@@ -20,25 +18,26 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Wanas switch entities."""
+    """Set up Wanas number entities."""
     coordinator: WanasCoordinator = entry.runtime_data
     async_add_entities(
-        WanasSwitch(coordinator, entry, desc) for desc in SWITCH_DESCRIPTIONS
+        WanasNumber(coordinator, entry, desc) for desc in NUMBER_DESCRIPTIONS
     )
 
 
-class WanasSwitch(CoordinatorEntity[WanasCoordinator], SwitchEntity):
-    """Representation of a Wanas switch."""
+class WanasNumber(CoordinatorEntity[WanasCoordinator], NumberEntity):
+    """Representation of a Wanas number entity."""
 
     _attr_has_entity_name = True
+    _attr_mode = NumberMode.BOX
 
     def __init__(
         self,
         coordinator: WanasCoordinator,
         entry: ConfigEntry,
-        description: WanasSwitchDescription,
+        description: WanasNumberDescription,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the number entity."""
         super().__init__(coordinator)
         self._description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
@@ -46,6 +45,10 @@ class WanasSwitch(CoordinatorEntity[WanasCoordinator], SwitchEntity):
         self._attr_name = coordinator.registers.get(
             f"{description.key}_name", description.name
         )
+        self._attr_native_min_value = description.min_value
+        self._attr_native_max_value = description.max_value
+        self._attr_native_step = description.step
+        self._attr_native_unit_of_measurement = description.unit
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Wanas Rekuperator",
@@ -67,23 +70,17 @@ class WanasSwitch(CoordinatorEntity[WanasCoordinator], SwitchEntity):
         )
 
     @property
-    def is_on(self) -> bool | None:
-        """Return true if the switch is on."""
+    def native_value(self) -> float | None:
+        """Return the current value."""
         if self.coordinator.data is None:
             return None
         value = self.coordinator.data.get(self._verify_address)
         if value is None:
             return None
-        return value != self._description.off_value
+        return float(value)
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the number value."""
         await self.coordinator.async_write_register(
-            self._write_address, self._description.on_value
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
-        await self.coordinator.async_write_register(
-            self._write_address, self._description.off_value
+            self._write_address, int(value)
         )

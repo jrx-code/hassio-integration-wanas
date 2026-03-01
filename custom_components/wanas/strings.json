@@ -37,6 +37,17 @@
               "indoor_temperature_address": "Indoor Temperature (address)",
               "current_temperature_name": "Current Temperature (name)",
               "current_temperature_address": "Current Temperature (address)",
+              "filter_replacement_name": "Filter Replacement (name)",
+              "filter_replacement_address": "Filter Replacement (address)",
+              "system_errors_name": "System Errors (name)",
+              "system_errors_address": "System Errors (address)"
+            }
+          },
+          "binary_sensors": {
+            "name": "Binary Sensors",
+            "data": {
+              "gwc_state_name": "GWC State (name)",
+              "gwc_state_address": "GWC State (address)",
               "bypass_state_name": "Bypass State (name)",
               "bypass_state_address": "Bypass State (address)",
               "humidifier_state_name": "Humidifier State (name)",
@@ -46,22 +57,15 @@
               "cooler_state_name": "Cooler State (name)",
               "cooler_state_address": "Cooler State (address)",
               "vacation_mode_name": "Vacation Mode (name)",
-              "vacation_mode_address": "Vacation Mode (address)",
-              "filter_replacement_name": "Filter Replacement (name)",
-              "filter_replacement_address": "Filter Replacement (address)",
-              "party_time_name": "Party Time (name)",
-              "party_time_address": "Party Time (address)",
-              "fan_speed_1_name": "Fan Speed 1 (name)",
-              "fan_speed_1_address": "Fan Speed 1 (address)",
-              "fan_speed_3_name": "Fan Speed 3 (name)",
-              "fan_speed_3_address": "Fan Speed 3 (address)",
-              "hood_state_name": "Hood State (name)",
-              "hood_state_address": "Hood State (address)"
+              "vacation_mode_address": "Vacation Mode (address)"
             }
           },
           "switches": {
             "name": "Switches",
             "data": {
+              "gwc_name": "GWC (name)",
+              "gwc_write_address": "GWC (write address)",
+              "gwc_verify_address": "GWC (verify address)",
               "bypass_name": "Bypass (name)",
               "bypass_write_address": "Bypass (write address)",
               "bypass_verify_address": "Bypass (verify address)",
@@ -74,6 +78,14 @@
               "cooler_name": "Cooler (name)",
               "cooler_write_address": "Cooler (write address)",
               "cooler_verify_address": "Cooler (verify address)",
+              "hood_name": "Hood (name)",
+              "hood_write_address": "Hood (write address)",
+              "hood_verify_address": "Hood (verify address)"
+            }
+          },
+          "numbers": {
+            "name": "Numbers",
+            "data": {
               "vacation_name": "Vacation (name)",
               "vacation_write_address": "Vacation (write address)",
               "vacation_verify_address": "Vacation (verify address)",
@@ -82,7 +94,13 @@
               "fireplace_verify_address": "Fireplace (verify address)",
               "party_name": "Party (name)",
               "party_write_address": "Party (write address)",
-              "party_verify_address": "Party (verify address)"
+              "party_verify_address": "Party (verify address)",
+              "fan_speed_1_name": "Fan Speed 1 (name)",
+              "fan_speed_1_write_address": "Fan Speed 1 (write address)",
+              "fan_speed_1_verify_address": "Fan Speed 1 (verify address)",
+              "fan_speed_3_name": "Fan Speed 3 (name)",
+              "fan_speed_3_write_address": "Fan Speed 3 (write address)",
+              "fan_speed_3_verify_address": "Fan Speed 3 (verify address)"
             }
           }
         }

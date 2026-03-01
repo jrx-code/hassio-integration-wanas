@@ -1,0 +1,11 @@
+Nazwa encji,Adres,Typ,Opis / Wartości,Jednostka
+Wydatek nawiewu,0,R,Aktualny przepływ powietrza +1,m3/h
+Wydatek wywiewu,1,R,Aktualny przepływ powietrza +1,m3/h
+Bieg nawiewu,2,R,"0: postój, 1: pusty dom, 2: praca, 3: wietrzenie +1",-
+Bieg wywiewu,3,R,Analogicznie jak bieg nawiewu +1,-
+Temperatura zewnętrzna,4,R,Skala 0.1 (np. 200 = 20.0°C). 65535 = -0.1°C ,°C
+Temperatura wyrzutowa,5,R,Skala 0.1 ,°C
+Temperatura nawiewowa,6,R,Skala 0.1 ,°C
+Temperatura pomieszczenia,7,R,Skala 0.1 (z czujnika w sterowniku) ,°C
+Temperatura EXTRA,29,R,Dodatkowy czujnik (np. GWC lub kanałowy) ,°C
+Wymiana filtra,36,R,Dni pozostałe do wymiany (0 = wymiana wymagana) ,dni

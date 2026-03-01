@@ -14,6 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import section
 
 from .const import (
+    BINARY_SENSOR_DESCRIPTIONS,
     CONF_PROTOCOL,
     CONF_REGISTERS,
     CONF_SHOW_ADVANCED,
@@ -22,6 +23,7 @@ from .const import (
     DEFAULT_PROTOCOL,
     DEFAULT_SLAVE_ID,
     DOMAIN,
+    NUMBER_DESCRIPTIONS,
     PROTOCOL_OPTIONS,
     PROTOCOL_TCP,
     PROTOCOL_UDP,
@@ -84,6 +86,13 @@ def _build_register_schema(defaults: dict[str, int | str]) -> vol.Schema:
         sensor_fields[vol.Required(nkey, default=defaults[nkey])] = str
         sensor_fields[vol.Required(akey, default=defaults[akey])] = int
 
+    binary_sensor_fields: dict = {}
+    for desc in BINARY_SENSOR_DESCRIPTIONS:
+        nkey = f"{desc.key}_name"
+        akey = f"{desc.key}_address"
+        binary_sensor_fields[vol.Required(nkey, default=defaults[nkey])] = str
+        binary_sensor_fields[vol.Required(akey, default=defaults[akey])] = int
+
     switch_fields: dict = {}
     for desc in SWITCH_DESCRIPTIONS:
         nkey = f"{desc.key}_name"
@@ -93,13 +102,28 @@ def _build_register_schema(defaults: dict[str, int | str]) -> vol.Schema:
         switch_fields[vol.Required(wkey, default=defaults[wkey])] = int
         switch_fields[vol.Required(vkey, default=defaults[vkey])] = int
 
+    number_fields: dict = {}
+    for desc in NUMBER_DESCRIPTIONS:
+        nkey = f"{desc.key}_name"
+        wkey = f"{desc.key}_write_address"
+        vkey = f"{desc.key}_verify_address"
+        number_fields[vol.Required(nkey, default=defaults[nkey])] = str
+        number_fields[vol.Required(wkey, default=defaults[wkey])] = int
+        number_fields[vol.Required(vkey, default=defaults[vkey])] = int
+
     return vol.Schema(
         {
             vol.Optional("sensors"): section(
                 vol.Schema(sensor_fields), {"collapsed": False}
             ),
+            vol.Optional("binary_sensors"): section(
+                vol.Schema(binary_sensor_fields), {"collapsed": False}
+            ),
             vol.Optional("switches"): section(
                 vol.Schema(switch_fields), {"collapsed": False}
+            ),
+            vol.Optional("numbers"): section(
+                vol.Schema(number_fields), {"collapsed": False}
             ),
         }
     )

@@ -1,0 +1,142 @@
+alias: Wentylacja
+description: >-
+  Automatyczne sterowanie rekuperacją w zależności od CO₂, wilgotności, trybu
+  okap, otwarcia okna i obecności domowników.
+variables:
+  co2_high: 1000
+  co2_low: 800
+  wilgotnosc_high: 65
+  wilgotnosc_low: 55
+  okna: &okna
+    - binary_sensor.czujniki_okna_kuchnia
+    - binary_sensor.czujniki_okna_lazienka_pietro
+    - binary_sensor.czujniki_okna_salon_kominek
+    - binary_sensor.czujniki_okna_salon_telewizyjny
+    - binary_sensor.czujniki_okna_sypialnia
+    - binary_sensor.czujniki_okna_gabinet_jarek
+    - binary_sensor.czujniki_okna_gabinet_marian
+    - binary_sensor.wyjscie_na_ogrod_sensative_00006_382
+triggers:
+  - alias: Włączenie wentylatora okapu
+    entity_id: sensor.gniazdo_okap_power
+    above: 25
+    for: "00:00:05"
+    id: okap_on
+    trigger: numeric_state
+  - alias: Wyłączenie wentylatora okapu
+    entity_id: sensor.gniazdo_okap_power
+    below: 10
+    for: "00:00:05"
+    id: okap_off
+    trigger: numeric_state
+  - alias: Wysoki poziom CO₂
+    entity_id: sensor.poziom_co2
+    above: 1000
+    for: "00:05:00"
+    id: co2_high
+    trigger: numeric_state
+  - alias: Normalny stan CO₂
+    entity_id: sensor.poziom_co2
+    below: 800
+    for: "00:02:00"
+    id: co2_low
+    trigger: numeric_state
+  - alias: Wysoki poziom wilgotności
+    entity_id: sensor.poziom_wilgotnosci_dom
+    above: 65
+    for: "00:05:00"
+    id: wilgotnosc_high
+    trigger: numeric_state
+  - alias: Normalny poziom wilgotności
+    entity_id: sensor.poziom_wilgotnosci_dom
+    below: 55
+    for: "00:05:00"
+    id: wilgotnosc_low
+    trigger: numeric_state
+  - alias: Otwarcie okien
+    entity_id: *okna
+    to: "on"
+    for: "00:00:30"
+    id: okno_otwarte
+    trigger: state
+  - alias: Zamknięcie okien
+    entity_id: *okna
+    to: "off"
+    for: "00:01:00"
+    id: okno_zamkniete
+    trigger: state
+conditions:
+  - condition: state
+    entity_id: binary_sensor.domownicy_sa_w_domu
+    state: "on"
+actions:
+  - choose:
+      - alias: Włączenie okapu
+        conditions:
+          - condition: trigger
+            id: okap_on
+        sequence:
+          - alias: Włącz tryb okap na rekuperatorze
+            action: switch.turn_on
+            target:
+              entity_id: switch.sterownik_rekuperacji_l3
+      - alias: Wyłączenie okapu
+        conditions:
+          - condition: trigger
+            id: okap_off
+        sequence:
+          - alias: Wyłącz tryb okap na rekuperatorze
+            action: switch.turn_off
+            target:
+              entity_id: switch.sterownik_rekuperacji_l3
+      - alias: Wysoki poziom CO₂
+        conditions:
+          - condition: trigger
+            id: co2_high
+          - condition: state
+            entity_id: switch.sterownik_rekuperacji_l2
+            state: "off"
+        sequence:
+          - alias: Włącz 3 bieg rekuperatora (CO₂)
+            action: switch.turn_on
+            target:
+              entity_id: switch.sterownik_rekuperacji_l2
+      - alias: Niski poziom CO₂
+        conditions:
+          - condition: trigger
+            id: co2_low
+        sequence:
+          - alias: Wyłącz 3 bieg rekuperatora (CO₂)
+            action: switch.turn_off
+            target:
+              entity_id: switch.sterownik_rekuperacji_l2
+      - alias: Wysoki poziom wilgotności
+        conditions:
+          - condition: trigger
+            id: wilgotnosc_high
+        sequence:
+          - alias: Włącz 3 bieg rekuperatora (wilgotność)
+            action: switch.turn_on
+            target:
+              entity_id: switch.sterownik_rekuperacji_l2
+      - alias: Niski poziom wilgotności
+        conditions:
+          - condition: trigger
+            id: wilgotnosc_low
+        sequence:
+          - alias: Wyłącz 3 bieg rekuperatora (wilgotność)
+            action: switch.turn_off
+            target:
+              entity_id: switch.sterownik_rekuperacji_l2
+      - alias: Otwarto okno – wyłącz wyższe biegi
+        conditions:
+          - condition: trigger
+            id: okno_otwarte
+        sequence:
+          - alias: Wyłącz wyższe biegi rekuperatora przy otwartym oknie
+            action: switch.turn_off
+            target:
+              entity_id:
+                - switch.sterownik_rekuperacji_l2
+                - switch.sterownik_rekuperacji_l3
+mode: single

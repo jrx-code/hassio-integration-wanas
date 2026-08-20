@@ -1,0 +1,77 @@
+# Example automations for Wanas ventilation
+# Add to automations.yaml or configuration.yaml
+
+automation:
+  # Filter replacement reminder
+  - alias: "Wanas Filter Replacement Alert"
+    description: "Alert when filter needs replacement within 7 days"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.wanas_filter_days_remaining
+        below: 7
+    action:
+      - service: notify.mobile_app
+        data:
+          message: "Wymień filtr w rekuperacji - zostało {{ states('sensor.wanas_filter_days_remaining') }} dni"
+          title: "Rekuperacja - wymiana filtra"
+
+  # Fireplace mode activation
+  - alias: "Wanas Fireplace Mode Activate"
+    description: "Activate fireplace mode when fireplace is running"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.fireplace_active
+        to: 'on'
+    action:
+      - service: modbus.write_register
+        data:
+          hub: wanas_ventilation
+          slave: 1
+          address: 44
+          value: 180
+
+  # Party mode activation
+  - alias: "Wanas Party Mode Activate"
+    description: "Activate party mode for increased ventilation"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.party_mode
+        to: 'on'
+    action:
+      - service: modbus.write_register
+        data:
+          hub: wanas_ventilation
+          slave: 1
+          address: 45
+          value: 720
+
+  # Heater activation for specific days
+  - alias: "Wanas Heater Activate"
+    description: "Activate heater for 30 days"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.wanas_heater_enable
+        to: 'on'
+    action:
+      - service: modbus.write_register
+        data:
+          hub: wanas_ventilation
+          slave: 1
+          address: 41
+          value: 30
+
+  # Vacation mode
+  - alias: "Wanas Vacation Mode"
+    description: "Set vacation mode for 14 days"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.vacation_mode
+        to: 'on'
+    action:
+      - service: modbus.write_register
+        data:
+          hub: wanas_ventilation
+          slave: 1
+          address: 43
+          value: 14
+

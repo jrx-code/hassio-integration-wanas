@@ -1,0 +1,15 @@
+# Alternative Modbus RTU configuration
+# Use this instead of TCP if connecting directly via serial
+
+- name: wanas_ventilation
+  type: serial
+  port: /dev/ttyUSB0
+  baudrate: 38400
+  bytesize: 8
+  parity: E
+  stopbits: 1
+  timeout: 5
+  delay: 1
+
+  # Then add all sensors/switches from wanas-modbus-sensors.yaml
+

@@ -1,0 +1,113 @@
+alias: Klimatyzacja
+description: Sterowanie klimatyzacją z histerezą, opóźnieniem i kontrolą obecności
+triggers:
+  - alias: Temperatura powyżej 25°C przez 10 minut
+    entity_id:
+      - sensor.wanas_temperatura_nawiewu
+      - sensor.openweathermap_temperature
+      - sensor.wanas_temperatura_zewnetrzna
+    above: 25
+    for: "00:10:00"
+    id: temp_powyzej_25
+    trigger: numeric_state
+  - alias: Temperatura poniżej 22°C przez 10 minut
+    entity_id:
+      - sensor.wanas_temperatura_nawiewu
+      - sensor.openweathermap_temperature
+      - sensor.wanas_temperatura_zewnetrzna
+    below: 22
+    for: "00:10:00"
+    id: temp_ponizej_22
+    trigger: numeric_state
+  - alias: Domownicy wyszli z domu
+    entity_id: binary_sensor.domownicy_sa_w_domu
+    from: "on"
+    to: "off"
+    for: "00:15:00"
+    id: nie_ma_domownikow
+    trigger: state
+  - alias: Temperatura chłodnicy powyżej 21°C
+    entity_id: sensor.wanas_temperatura_chlodnicy
+    above: 21
+    for: "00:05:00"
+    id: chlodnica_powyzej_21
+    trigger: numeric_state
+  - alias: Temperatura chłodnicy poniżej 18°C
+    entity_id: sensor.wanas_temperatura_chlodnicy
+    below: 18
+    for: "00:05:00"
+    id: chlodnica_ponizej_18
+    trigger: numeric_state
+  - alias: Temperatura na zewnątrz powyżej 15°C
+    entity_id: sensor.temperatura_zewnetrzna
+    above: 15
+    for: "00:05:00"
+    id: zewn_powyzej_15
+    trigger: numeric_state
+  - alias: Temperatura na zewnątrz poniżej 15°C
+    entity_id: sensor.temperatura_zewnetrzna
+    below: 15
+    for: "00:05:00"
+    id: zewn_ponizej_15
+    trigger: numeric_state
+actions:
+  - choose:
+      - alias: Włącz chłodnicę (temp > 25°C + obecność)
+        conditions:
+          - condition: trigger
+            id: temp_powyzej_25
+          - condition: state
+            entity_id: binary_sensor.domownicy_sa_w_domu
+            state: "on"
+          - condition: state
+            entity_id: switch.wanas_chlodnica
+            state: "off"
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.wanas_chlodnica
+      - alias: Wyłącz chłodnicę (temp < 22°C)
+        conditions:
+          - condition: trigger
+            id: temp_ponizej_22
+          - condition: state
+            entity_id: switch.wanas_chlodnica
+            state: "on"
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.wanas_chlodnica
+      - alias: Wyłącz chłodnicę (brak domowników)
+        conditions:
+          - condition: trigger
+            id: nie_ma_domownikow
+          - condition: state
+            entity_id: switch.wanas_chlodnica
+            state: "on"
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.wanas_chlodnica
+      - alias: Wyłącz chłodnicę (ochrona przed zamarzaniem wężownicy < 18°C)
+        conditions:
+          - condition: trigger
+            id: chlodnica_ponizej_18
+          - condition: state
+            entity_id: switch.wanas_chlodnica
+            state: "on"
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.wanas_chlodnica
+      - alias: Wyłącz chłodnicę (temperatura zewn. < 15°C)
+        conditions:
+          - condition: trigger
+            id: zewn_ponizej_15
+          - condition: state
+            entity_id: switch.wanas_chlodnica
+            state: "on"
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.wanas_chlodnica
+mode: single

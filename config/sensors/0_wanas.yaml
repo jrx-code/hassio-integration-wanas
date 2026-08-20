@@ -1,0 +1,212 @@
+modbus:
+  - name: wanas_modbus
+    type: rtuovertcp
+    host: !secret wanas_modbus_url
+    port: 502
+    delay: 2
+    message_wait_milliseconds: 200
+    timeout: 5000
+
+    sensors:
+      - name: "Wydatek nawiewu"
+        unique_id: wanas_wydatek_nawiewu
+        state_class: measurement
+        unit_of_measurement: 'm³/h'
+        slave: 1
+        address: 0
+
+      - name: "Wydatek wywiewu"
+        unique_id: wanas_wydatek_wywiewu
+        state_class: measurement
+        unit_of_measurement: 'm³/h'
+        slave: 1
+        address: 1
+
+      - name: "Bieg nawiewu"
+        unique_id: wanas_bieg_nawiewu
+        slave: 1
+        address: 2
+
+      - name: "Bieg wywiewu"
+        unique_id: wanas_bieg_wywiewu
+        slave: 1
+        address: 3
+
+      - name: "Temperatura zewnętrzna"
+        unique_id: wanas_temperatura_zewnetrzna
+        <<: &temp_defaults
+          device_class: temperature
+          state_class: measurement
+          unit_of_measurement: '°C'
+          scale: 0.1
+          precision: 1
+          data_type: int16
+        slave: 1
+        address: 4
+
+      - name: "Temperatura wyrzutowa"
+        unique_id: wanas_temperatura_wyrzutowa
+        <<: *temp_defaults
+        slave: 1
+        address: 5
+
+      - name: "Temperatura nawiewu"
+        unique_id: wanas_temperatura_nawiewu
+        <<: *temp_defaults
+        slave: 1
+        address: 6
+
+      - name: "Temperatura wewnątrz"
+        unique_id: wanas_temperatura_wewnatrz
+        <<: *temp_defaults
+        slave: 1
+        address: 7
+
+      - name: "Aktualna temperatura"
+        unique_id: wanas_aktualna_temperatura
+        <<: *temp_defaults
+        slave: 1
+        address: 29
+
+      - name: "Stan bypass"
+        unique_id: wanas_stan_bypass
+        slave: 1
+        address: 31
+
+      - name: "Stan nawilżacza"
+        unique_id: wanas_stan_nawilzacz
+        slave: 1
+        address: 32
+
+      - name: "Stan nagrzewnicy"
+        unique_id: wanas_stan_nagrzewnica
+        slave: 1
+        address: 33
+
+      - name: "Stan chłodnicy"
+        unique_id: wanas_stan_chlodnica
+        slave: 1
+        address: 34
+
+      - name: "Tryb urlopowy"
+        unique_id: wanas_stan_urlop
+        slave: 1
+        address: 35
+
+      - name: "Wymiana filtra"
+        unique_id: wanas_zuzycie_filtra
+        unit_of_measurement: 'dni'
+        slave: 1
+        address: 36
+
+      - name: "Impreza"
+        unique_id: wanas_stan_impreza
+        unit_of_measurement: "min"
+        scale: 0.17
+        precision: 1
+        data_type: int16
+        slave: 1
+        address: 45
+
+      - name: "Bieg I"
+        unique_id: wanas_stan_bieg_i
+        data_type: int16
+        slave: 1
+        address: 46
+
+      - name: "Bieg III"
+        unique_id: wanas_stan_bieg_iii
+        data_type: int16
+        slave: 1
+        address: 47
+
+      - name: "Okap - stan"
+        unique_id: wanas_stan_okap
+        data_type: int16
+        slave: 1
+        address: 48
+
+    switches:
+      - name: Wanas Bypass
+        unique_id: wanas_bypass
+        slave: 1
+        address: 39
+        command_on: 1
+        command_off: 0
+        verify:
+          address: 31
+          delay: 2
+          state_on: 1
+          state_off: 0
+
+      - name: Nawilżacz
+        unique_id: wanas_nawilzacz
+        slave: 1
+        address: 40
+        command_on: 1
+        command_off: 0
+        verify:
+          address: 32
+          delay: 2
+          state_on: 1
+          state_off: 0
+
+      - name: Nagrzewnica
+        unique_id: wanas_nagrzewnica
+        slave: 1
+        address: 41
+        command_on: 1
+        command_off: 0
+        verify:
+          address: 33
+          delay: 1
+          state_on: 1
+          state_off: 0
+
+      - name: Chłodnica
+        unique_id: wanas_chlodnica
+        slave: 1
+        address: 42
+        command_on: 1
+        command_off: 0
+        verify:
+          address: 34
+          delay: 1
+          state_on: 1
+          state_off: 0
+
+      - name: Urlop
+        unique_id: wanas_urlop
+        slave: 1
+        address: 43
+        command_on: 30
+        command_off: 0
+        verify:
+          address: 35
+          delay: 1
+          state_on: 1
+          state_off: 0
+
+      - name: Kominek
+        unique_id: wanas_kominek
+        slave: 1
+        address: 44
+        command_on: 180
+        command_off: 0
+        verify:
+          address: 44
+          delay: 1
+          state_off: 0
+          state_on: 180
+
+      - name: Impreza
+        unique_id: wanas_impreza
+        slave: 1
+        address: 45
+        command_on: 720
+        command_off: 0
+        verify:
+          address: 45
+          delay: 1
+          state_off: 0
+          state_on: 720

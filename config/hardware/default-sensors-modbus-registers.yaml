@@ -1,0 +1,378 @@
+# Wanas Modbus Sensors Configuration for Home Assistant
+# https://www.home-assistant.io/integrations/modbus/
+# 
+# Configuration for ventilation unit with Modbus RTU/TCP support
+# Default Modbus settings: Address 1, Baud 19200, 8E1
+# 
+# Usage:
+# 1. Add this file to your Home Assistant configuration
+# 2. Include in configuration.yaml:
+#    modbus: !include wanas-modbus-sensors.yaml
+# 3. Adjust host/port for Modbus TCP or serial port for Modbus RTU
+# 4. Restart Home Assistant
+
+- name: wanas_ventilation
+  type: tcp
+  host: 192.168.1.100  # Waveshare RS485-to-ETH converter IP address (change to yours)
+  port: 502
+  delay: 1
+  timeout: 5
+
+  sensors:
+    # ===== Flow Rates (m3/h) =====
+    - name: "Wanas Supply Flow"
+      unique_id: wanas_supply_flow
+      slave: 1
+      address: 0
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "m³/h"
+      device_class: volume_flow_rate
+      state_class: measurement
+      scan_interval: 30
+
+    - name: "Wanas Exhaust Flow"
+      unique_id: wanas_exhaust_flow
+      slave: 1
+      address: 1
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "m³/h"
+      device_class: volume_flow_rate
+      state_class: measurement
+      scan_interval: 30
+
+    # ===== Current Speed Levels =====
+    # 0=off, 1=empty home, 2=normal, 3=ventilation
+    - name: "Wanas Supply Speed Level"
+      unique_id: wanas_supply_speed_level
+      slave: 1
+      address: 2
+      input_type: holding
+      data_type: uint16
+      scan_interval: 30
+
+    - name: "Wanas Exhaust Speed Level"
+      unique_id: wanas_exhaust_speed_level
+      slave: 1
+      address: 3
+      input_type: holding
+      data_type: uint16
+      scan_interval: 30
+
+    # ===== Temperatures (°C) =====
+    # Formula: 0=0°C, 65535=-0.1°C, 63066=sensor error
+    # For proper conversion use template sensor or customize value_template
+
+    - name: "Wanas Outdoor Temperature Raw"
+      unique_id: wanas_outdoor_temp_raw
+      slave: 1
+      address: 4
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    - name: "Wanas Supply Temperature Raw"
+      unique_id: wanas_supply_temp_raw
+      slave: 1
+      address: 5
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    - name: "Wanas Inlet Temperature Raw"
+      unique_id: wanas_inlet_temp_raw
+      slave: 1
+      address: 6
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    - name: "Wanas Room Temperature Raw"
+      unique_id: wanas_room_temp_raw
+      slave: 1
+      address: 7
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    - name: "Wanas Extra Temperature Raw"
+      unique_id: wanas_extra_temp_raw
+      slave: 1
+      address: 29
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    # ===== Weekly Schedule Settings =====
+    # Day of week: 0=Sunday, 1=Monday, ..., 6=Saturday
+    - name: "Wanas Day of Week"
+      unique_id: wanas_day_of_week
+      slave: 1
+      address: 8
+      input_type: holding
+      data_type: uint16
+      scan_interval: 300
+
+    # Zone end times in minutes from midnight (step 15 min)
+    - name: "Wanas Zone 1 End"
+      unique_id: wanas_zone1_end
+      slave: 1
+      address: 10
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "min"
+      scan_interval: 300
+
+    - name: "Wanas Zone 2 End"
+      unique_id: wanas_zone2_end
+      slave: 1
+      address: 11
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "min"
+      scan_interval: 300
+
+    - name: "Wanas Zone 3 End"
+      unique_id: wanas_zone3_end
+      slave: 1
+      address: 12
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "min"
+      scan_interval: 300
+
+    - name: "Wanas Zone 4 End"
+      unique_id: wanas_zone4_end
+      slave: 1
+      address: 13
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "min"
+      scan_interval: 300
+
+    # Zone speed levels (0-3)
+    - name: "Wanas Zone 1 Speed"
+      unique_id: wanas_zone1_speed
+      slave: 1
+      address: 14
+      input_type: holding
+      data_type: uint16
+      scan_interval: 300
+
+    - name: "Wanas Zone 2 Speed"
+      unique_id: wanas_zone2_speed
+      slave: 1
+      address: 15
+      input_type: holding
+      data_type: uint16
+      scan_interval: 300
+
+    - name: "Wanas Zone 3 Speed"
+      unique_id: wanas_zone3_speed
+      slave: 1
+      address: 16
+      input_type: holding
+      data_type: uint16
+      scan_interval: 300
+
+    - name: "Wanas Zone 4 Speed"
+      unique_id: wanas_zone4_speed
+      slave: 1
+      address: 17
+      input_type: holding
+      data_type: uint16
+      scan_interval: 300
+
+    - name: "Wanas Zone 5 Speed"
+      unique_id: wanas_zone5_speed
+      slave: 1
+      address: 18
+      input_type: holding
+      data_type: uint16
+      scan_interval: 300
+
+    # Zone temperatures (10-30°C)
+    - name: "Wanas Zone 1 Temperature"
+      unique_id: wanas_zone1_temp
+      slave: 1
+      address: 19
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "°C"
+      device_class: temperature
+      scan_interval: 300
+
+    - name: "Wanas Zone 2 Temperature"
+      unique_id: wanas_zone2_temp
+      slave: 1
+      address: 20
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "°C"
+      device_class: temperature
+      scan_interval: 300
+
+    - name: "Wanas Zone 3 Temperature"
+      unique_id: wanas_zone3_temp
+      slave: 1
+      address: 21
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "°C"
+      device_class: temperature
+      scan_interval: 300
+
+    - name: "Wanas Zone 4 Temperature"
+      unique_id: wanas_zone4_temp
+      slave: 1
+      address: 22
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "°C"
+      device_class: temperature
+      scan_interval: 300
+
+    - name: "Wanas Zone 5 Temperature"
+      unique_id: wanas_zone5_temp
+      slave: 1
+      address: 23
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "°C"
+      device_class: temperature
+      scan_interval: 300
+
+    # ===== Device Status Indicators (0=inactive, 1=active) =====
+    - name: "Wanas GWC Status"
+      unique_id: wanas_gwc_status
+      slave: 1
+      address: 30
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    - name: "Wanas Bypass Status"
+      unique_id: wanas_bypass_status
+      slave: 1
+      address: 31
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    - name: "Wanas Humidifier Status"
+      unique_id: wanas_humidifier_status
+      slave: 1
+      address: 32
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    - name: "Wanas Heater Status"
+      unique_id: wanas_heater_status
+      slave: 1
+      address: 33
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    - name: "Wanas Cooler Status"
+      unique_id: wanas_cooler_status
+      slave: 1
+      address: 34
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    - name: "Wanas Vacation Status"
+      unique_id: wanas_vacation_status
+      slave: 1
+      address: 35
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    # ===== Filter Maintenance =====
+    # 0=needs replacement, 1-252=days until replacement
+    - name: "Wanas Filter Days Remaining"
+      unique_id: wanas_filter_days
+      slave: 1
+      address: 36
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "days"
+      scan_interval: 3600
+
+    # ===== Errors =====
+    # Binary error register - decode with template
+    - name: "Wanas Errors"
+      unique_id: wanas_errors
+      slave: 1
+      address: 37
+      input_type: holding
+      data_type: uint16
+      scan_interval: 60
+
+    # ===== Speed Power Percentages (1-100%) =====
+    - name: "Wanas Speed 1 Power"
+      unique_id: wanas_speed1_power
+      slave: 1
+      address: 52
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "%"
+      scan_interval: 300
+
+    - name: "Wanas Speed 2 Power"
+      unique_id: wanas_speed2_power
+      slave: 1
+      address: 53
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "%"
+      scan_interval: 300
+
+    - name: "Wanas Speed 3 Power"
+      unique_id: wanas_speed3_power
+      slave: 1
+      address: 54
+      input_type: holding
+      data_type: uint16
+      unit_of_measurement: "%"
+      scan_interval: 300
+
+  # ===== Writable Registers (switches/numbers) =====
+  # Use number/select/switch helpers or write services
+
+  switches:
+    # GWC control
+    - name: "Wanas GWC Control"
+      unique_id: wanas_gwc_control
+      slave: 1
+      address: 38
+      write_type: holding
+      command_on: 1
+      command_off: 0
+      scan_interval: 60
+
+    # Bypass control
+    - name: "Wanas Bypass Control"
+      unique_id: wanas_bypass_control
+      slave: 1
+      address: 39
+      write_type: holding
+      command_on: 1
+      command_off: 0
+      scan_interval: 60
+
+    # Humidifier control
+    - name: "Wanas Humidifier Control"
+      unique_id: wanas_humidifier_control
+      slave: 1
+      address: 40
+      write_type: holding
+      command_on: 1
+      command_off: 0
+      scan_interval: 60
+
+

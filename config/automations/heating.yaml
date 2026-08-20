@@ -1,0 +1,52 @@
+alias: Ogrzewanie
+description: Harmonogram ogrzewania – tryb nocny o 00:00 i dzienny o 06:00
+triggers:
+  - trigger: time
+    at: "00:00:00"
+    alias: Czas | 00:00
+    id: czas-00
+  - trigger: time
+    at: "06:00:00"
+    alias: Czas | 06:00
+    id: czas-06
+conditions: []
+actions:
+  - alias: Czas | 00:00
+    if:
+      - condition: trigger
+        id: czas-00
+    then:
+      - alias: Ustaw tryb SEN
+        action: climate.set_preset_mode
+        data:
+          preset_mode: sleep
+        target:
+          label_id: hvac
+      - alias: Ustaw tryb EKO
+        action: climate.set_preset_mode
+        data:
+          preset_mode: eco
+        target:
+          entity_id: climate.pokoj_goscinny
+  - alias: Czas | 06:00
+    if:
+      - condition: trigger
+        id: czas-06
+    then:
+      - alias: Włącz termostaty
+        action: climate.set_hvac_mode
+        data:
+          hvac_mode: heat
+        target:
+          label_id: hvac
+      - alias: Ustaw tryb DOM
+        action: climate.set_preset_mode
+        data:
+          preset_mode: home
+        target:
+          label_id: hvac
+      - alias: Odtwórz stan termostatów
+        action: scene.turn_on
+        target:
+          entity_id: scene.stan_termostatow
+mode: single

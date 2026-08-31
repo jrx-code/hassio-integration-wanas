@@ -17,9 +17,7 @@ config/
 │   └── heating.yaml              # Time-based heating schedule (night/day presets)
 ├── hardware/
 │   ├── modbus-registers.json     # Complete Modbus register map (54 registers, 0–54)
-│   ├── default-sensors-modbus-registers.yaml
-│   └── waveshare-485-eth.json    # RS232/485 converter backup config
-└── helpers/                      # Reserved, currently empty
+│   └── default-sensors-modbus-registers.yaml
 examples/                         # Reference automations, dashboard, RTU serial config
 ```
 
@@ -58,11 +56,11 @@ The automations depend on entities not defined in this repo (they come from othe
 - `sensor.poziom_co2`, `sensor.poziom_wilgotnosci_dom`, `sensor.gniazdo_okap_power`
 - `binary_sensor.domownicy_sa_w_domu` (presence)
 - 8 window contact sensors (`binary_sensor.czujniki_okna_*`)
-- `switch.sterownik_rekuperacji_l2` (speed 3 / "L2 - Bieg 3"), `switch.sterownik_rekuperacji_l3` (hood/fireplace mode / "L3 - Tryb okap/kominek") — Z2M MQTT switches on HRV digital inputs (TS0004 4-gang relay, IEEE `0xa4c138b7a45d8cd7`)
+- `switch.sterownik_rekuperacji_l2` (speed 3 / "L2 - Bieg 3"), `switch.sterownik_rekuperacji_l3` (hood/fireplace mode / "L3 - Tryb okap/kominek") — Z2M MQTT switches on HRV digital inputs (TS0004 4-gang relay; use your own device's IEEE address)
 - `climate.*` entities labeled `hvac`, `scene.stan_termostatow`
 
 ## Modbus Connection Settings
 
 - Protocol: Modbus RTU over TCP (alternative: pure RTU serial at `/dev/ttyUSB0`, 38400 baud 8E1 — see `examples/modbus_rtu.yaml`)
 - Default: port 502, slave 1, timeout 5000ms, message_wait 200ms, delay 2s
-- Hardware: Waveshare RS232/485 WiFi/ETH converter (config in `config/hardware/waveshare-485-eth.json`)
+- Hardware: Waveshare RS232/485 WiFi/ETH converter

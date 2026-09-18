@@ -1,38 +1,38 @@
-"""Config flow for Wanas integration."""
+"""Config flow for the Wanas integration."""
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
-from pymodbus.client import AsyncModbusTcpClient, AsyncModbusUdpClient
-from pymodbus.framer import FramerType
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
+from homeassistant.helpers import selector
 
 from .const import (
     BINARY_SENSOR_DESCRIPTIONS,
     CONF_PROTOCOL,
     CONF_REGISTERS,
+    CONF_SCAN_INTERVAL,
     CONF_SHOW_ADVANCED,
     CONF_SLAVE_ID,
     DEFAULT_PORT,
     DEFAULT_PROTOCOL,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLAVE_ID,
     DOMAIN,
+    MAX_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
     NUMBER_DESCRIPTIONS,
     PROTOCOL_OPTIONS,
-    PROTOCOL_TCP,
-    PROTOCOL_UDP,
     SENSOR_DESCRIPTIONS,
     SWITCH_DESCRIPTIONS,
     get_default_register_config,
 )
-
-_LOGGER = logging.getLogger(__name__)
+from .modbus_client import async_test_connection
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -45,36 +45,20 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def _create_client(
-    host: str, port: int, protocol: str
-) -> AsyncModbusTcpClient | AsyncModbusUdpClient:
-    """Create a Modbus client based on protocol selection."""
-    if protocol == PROTOCOL_UDP:
-        return AsyncModbusUdpClient(host=host, port=port, framer=FramerType.SOCKET)
-    if protocol == PROTOCOL_TCP:
-        return AsyncModbusTcpClient(host=host, port=port, framer=FramerType.SOCKET)
-    # RTU over TCP
-    return AsyncModbusTcpClient(host=host, port=port, framer=FramerType.RTU)
-
-
-async def _test_connection(host: str, port: int, slave_id: int, protocol: str) -> str | None:
-    """Test Modbus connection. Returns error key or None on success."""
-    client = _create_client(host, port, protocol)
-    try:
-        connected = await client.connect()
-        if not connected:
-            return "cannot_connect"
-        result = await client.read_holding_registers(
-            address=0, count=1, device_id=slave_id
-        )
-        if result.isError():
-            return "cannot_connect"
-    except Exception:
-        _LOGGER.exception("Error testing Modbus connection")
-        return "cannot_connect"
-    finally:
-        client.close()
-    return None
+def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Flatten nested section data into a single dict."""
+    flat: dict[str, Any] = {}
+    for value in user_input.values():
+        if isinstance(value, dict):
+            flat.update(value)
+        else:
+            flat[value] = value  # pragma: no cover - defensive
+    # Prefer only dict sections; top-level non-dicts are ignored for registers
+    flat = {}
+    for value in user_input.values():
+        if isinstance(value, dict):
+            flat.update(value)
+    return flat
 
 
 def _build_register_schema(defaults: dict[str, int | str]) -> vol.Schema:
@@ -138,6 +122,12 @@ class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._connection_data: dict[str, Any] = {}
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return WanasOptionsFlow()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -145,14 +135,14 @@ class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            error = await _test_connection(
+            ok = await async_test_connection(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
                 user_input[CONF_SLAVE_ID],
                 user_input[CONF_PROTOCOL],
             )
-            if error:
-                errors["base"] = error
+            if not ok:
+                errors["base"] = "cannot_connect"
             else:
                 show_advanced = user_input.pop(CONF_SHOW_ADVANCED, False)
                 await self.async_set_unique_id(
@@ -182,15 +172,82 @@ class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
         defaults = get_default_register_config()
 
         if user_input is not None:
-            # Flatten nested section data into a single dict
-            flat: dict[str, Any] = {}
-            for value in user_input.values():
-                if isinstance(value, dict):
-                    flat.update(value)
+            flat = _flatten_sections(user_input)
             return self.async_create_entry(
                 title=f"Wanas ({self._connection_data[CONF_HOST]})",
                 data=self._connection_data,
                 options={CONF_REGISTERS: flat},
+            )
+
+        return self.async_show_form(
+            step_id="registers",
+            data_schema=_build_register_schema(defaults),
+        )
+
+
+class WanasOptionsFlow(OptionsFlow):
+    """Handle Wanas options (scan interval + register remapping)."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage Wanas options."""
+        if user_input is not None:
+            self._scan_interval = user_input[CONF_SCAN_INTERVAL]
+            if user_input.get("configure_registers"):
+                return await self.async_step_registers()
+
+            return self.async_create_entry(
+                title="",
+                data={
+                    CONF_SCAN_INTERVAL: self._scan_interval,
+                    CONF_REGISTERS: self.config_entry.options.get(CONF_REGISTERS, {}),
+                },
+            )
+
+        current = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_SCAN_INTERVAL, default=current): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=MIN_SCAN_INTERVAL,
+                            max=MAX_SCAN_INTERVAL,
+                            mode=selector.NumberSelectorMode.BOX,
+                            unit_of_measurement="s",
+                        )
+                    ),
+                    vol.Optional("configure_registers", default=False): bool,
+                }
+            ),
+        )
+
+    async def async_step_registers(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Edit register addresses and names."""
+        defaults = {
+            **get_default_register_config(),
+            **self.config_entry.options.get(CONF_REGISTERS, {}),
+        }
+
+        if user_input is not None:
+            flat = _flatten_sections(user_input)
+            return self.async_create_entry(
+                title="",
+                data={
+                    CONF_SCAN_INTERVAL: getattr(
+                        self,
+                        "_scan_interval",
+                        self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                        ),
+                    ),
+                    CONF_REGISTERS: flat,
+                },
             )
 
         return self.async_show_form(

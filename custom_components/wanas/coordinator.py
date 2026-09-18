@@ -1,10 +1,12 @@
-"""DataUpdateCoordinator for the Wanas integration."""
+"""DataUpdateCoordinator for Wanas integration."""
 
 from __future__ import annotations
 
 import ctypes
 import logging
 from datetime import timedelta
+
+from pymodbus.client import AsyncModbusTcpClient, AsyncModbusUdpClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -22,14 +24,12 @@ from .const import (
     RegisterDataType,
     get_default_registers,
 )
-from .modbus_client import ModbusClient, create_client
+from .modbus_client import create_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _build_read_blocks(
-    addresses: list[int], max_gap: int = 3
-) -> list[tuple[int, int]]:
+def _build_read_blocks(addresses: list[int], max_gap: int = 3) -> list[tuple[int, int]]:
     """Group sorted addresses into contiguous read blocks.
 
     Returns list of (start_address, count) tuples.
@@ -73,15 +73,16 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         self.port: int = entry.data[CONF_PORT]
         self.slave_id: int = entry.data[CONF_SLAVE_ID]
         self.protocol: str = entry.data.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
-        self._client: ModbusClient | None = None
+        self._client: AsyncModbusTcpClient | AsyncModbusUdpClient | None = None
 
+        # Build effective register map: defaults overridden by user options
         defaults = get_default_registers()
         overrides = entry.options.get(CONF_REGISTERS, {})
         self.registers: dict[str, int | str] = {**defaults, **overrides}
 
+        # Pre-compute read blocks from address keys only (skip *_name keys)
         all_addresses = [
-            v
-            for k, v in self.registers.items()
+            v for k, v in self.registers.items()
             if k.endswith("_address") and isinstance(v, int)
         ]
         self._read_blocks = _build_read_blocks(all_addresses)
@@ -91,7 +92,7 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         """Return the computed Modbus read blocks."""
         return self._read_blocks
 
-    async def _get_client(self) -> ModbusClient:
+    async def _get_client(self) -> AsyncModbusTcpClient | AsyncModbusUdpClient:
         """Get or create the Modbus client."""
         if self._client is None or not self._client.connected:
             self._client = create_client(self.host, self.port, self.protocol)
@@ -103,7 +104,7 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         return self._client
 
     async def _read_registers(
-        self, client: ModbusClient, address: int, count: int
+        self, client: AsyncModbusTcpClient | AsyncModbusUdpClient, address: int, count: int
     ) -> list[int]:
         """Read holding registers and return values."""
         result = await client.read_holding_registers(
@@ -146,7 +147,10 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
                 address=address, value=value, device_id=self.slave_id
             )
             if result.isError():
-                raise UpdateFailed(f"Error writing register {address}: {result}")
+                raise UpdateFailed(
+                    f"Error writing register {address}: {result}"
+                )
+            # Refresh data after write
             await self.async_request_refresh()
         except UpdateFailed:
             raise
@@ -162,10 +166,7 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
 
     @staticmethod
     def get_sensor_value(
-        data: dict[int, int],
-        address: int,
-        data_type: RegisterDataType,
-        scale: float | None,
+        data: dict[int, int], address: int, data_type: RegisterDataType, scale: float | None
     ) -> float | int | None:
         """Parse a register value with type and scale handling."""
         raw = data.get(address)

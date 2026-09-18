@@ -11,10 +11,8 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_PROTOCOL,
-    CONF_REGISTERS,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE_ID,
-    DEFAULT_PROTOCOL,
     DEFAULT_SCAN_INTERVAL,
 )
 from .coordinator import WanasCoordinator
@@ -27,37 +25,17 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: WanasCoordinator = entry.runtime_data
-
-    register_addresses = {
-        key: value
-        for key, value in coordinator.registers.items()
-        if key.endswith("_address") and isinstance(value, int)
-    }
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     return {
-        "entry": {
-            "data": async_redact_data(dict(entry.data), TO_REDACT),
-            "options": {
-                CONF_SCAN_INTERVAL: entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-                CONF_REGISTERS: entry.options.get(CONF_REGISTERS, {}),
-            },
-            "protocol": entry.data.get(CONF_PROTOCOL, DEFAULT_PROTOCOL),
-            "slave_id": entry.data.get(CONF_SLAVE_ID),
-        },
-        "coordinator": {
-            "last_update_success": coordinator.last_update_success,
-            "update_interval_seconds": (
-                coordinator.update_interval.total_seconds()
-                if coordinator.update_interval
-                else None
-            ),
-            "read_blocks": [
-                {"start": start, "count": count}
-                for start, count in coordinator.read_blocks
-            ],
-            "register_addresses": register_addresses,
-            "data_keys": sorted(coordinator.data.keys()) if coordinator.data else [],
-        },
+        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
+        "protocol": entry.data.get(CONF_PROTOCOL),
+        "slave_id": entry.data.get(CONF_SLAVE_ID),
+        "scan_interval": scan_interval,
+        "registers": coordinator.registers,
+        "read_blocks": [
+            {"start": start, "count": count}
+            for start, count in coordinator.read_blocks
+        ],
+        "last_update_success": coordinator.last_update_success,
     }

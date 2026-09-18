@@ -49,6 +49,15 @@ Monitor temperatures, airflow, fan speeds, filter status — and toggle bypass, 
 
 4. The integration will test the connection before saving
 
+### Options / Configure
+
+After setup, open the integration → **Configure** to:
+
+- Change the **scan interval** (default `30` s, range `5`–`300` s)
+- Optionally re-edit entity names and Modbus register addresses
+
+Options changes reload the integration automatically.
+
 ### Advanced: Custom Register Addresses
 
 If your device uses non-standard register mapping:

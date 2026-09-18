@@ -1,13 +1,13 @@
-"""DataUpdateCoordinator for Wanas integration."""
+"""DataUpdateCoordinator for the Wanas integration."""
 
 from __future__ import annotations
 
 import ctypes
 import logging
 from datetime import timedelta
+from typing import Any
 
 from pymodbus.client import AsyncModbusTcpClient, AsyncModbusUdpClient
-from pymodbus.framer import FramerType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -17,20 +17,34 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CONF_PROTOCOL,
     CONF_REGISTERS,
+    CONF_SCAN_INTERVAL,
     CONF_SLAVE_ID,
     DEFAULT_PROTOCOL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    PROTOCOL_TCP,
-    PROTOCOL_UDP,
+    MAX_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
     RegisterDataType,
     get_default_registers,
 )
+from .modbus_client import create_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _build_read_blocks(addresses: list[int], max_gap: int = 3) -> list[tuple[int, int]]:
+def _resolve_scan_interval(options: dict[str, Any]) -> int:
+    """Return a sane scan interval from options."""
+    raw = options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_SCAN_INTERVAL
+    return max(MIN_SCAN_INTERVAL, min(MAX_SCAN_INTERVAL, value))
+
+
+def _build_read_blocks(
+    addresses: list[int], max_gap: int = 3
+) -> list[tuple[int, int]]:
     """Group sorted addresses into contiguous read blocks.
 
     Returns list of (start_address, count) tuples.
@@ -63,11 +77,12 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
+        scan_interval = _resolve_scan_interval(dict(entry.options))
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(seconds=scan_interval),
         )
         self.host: str = entry.data[CONF_HOST]
         self.port: int = entry.data[CONF_PORT]
@@ -75,37 +90,26 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         self.protocol: str = entry.data.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
         self._client: AsyncModbusTcpClient | AsyncModbusUdpClient | None = None
 
-        # Build effective register map: defaults overridden by user options
         defaults = get_default_registers()
         overrides = entry.options.get(CONF_REGISTERS, {})
         self.registers: dict[str, int | str] = {**defaults, **overrides}
 
-        # Pre-compute read blocks from address keys only (skip *_name keys)
         all_addresses = [
-            v for k, v in self.registers.items()
+            v
+            for k, v in self.registers.items()
             if k.endswith("_address") and isinstance(v, int)
         ]
         self._read_blocks = _build_read_blocks(all_addresses)
 
-    def _create_client(self) -> AsyncModbusTcpClient | AsyncModbusUdpClient:
-        """Create a Modbus client based on protocol selection."""
-        if self.protocol == PROTOCOL_UDP:
-            return AsyncModbusUdpClient(
-                host=self.host, port=self.port, framer=FramerType.SOCKET
-            )
-        if self.protocol == PROTOCOL_TCP:
-            return AsyncModbusTcpClient(
-                host=self.host, port=self.port, framer=FramerType.SOCKET
-            )
-        # RTU over TCP
-        return AsyncModbusTcpClient(
-            host=self.host, port=self.port, framer=FramerType.RTU
-        )
+    @property
+    def read_blocks(self) -> list[tuple[int, int]]:
+        """Return the computed Modbus read blocks."""
+        return self._read_blocks
 
     async def _get_client(self) -> AsyncModbusTcpClient | AsyncModbusUdpClient:
         """Get or create the Modbus client."""
         if self._client is None or not self._client.connected:
-            self._client = self._create_client()
+            self._client = create_client(self.host, self.port, self.protocol)
             connected = await self._client.connect()
             if not connected:
                 raise UpdateFailed(
@@ -114,7 +118,10 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         return self._client
 
     async def _read_registers(
-        self, client: AsyncModbusTcpClient | AsyncModbusUdpClient, address: int, count: int
+        self,
+        client: AsyncModbusTcpClient | AsyncModbusUdpClient,
+        address: int,
+        count: int,
     ) -> list[int]:
         """Read holding registers and return values."""
         result = await client.read_holding_registers(
@@ -157,10 +164,7 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
                 address=address, value=value, device_id=self.slave_id
             )
             if result.isError():
-                raise UpdateFailed(
-                    f"Error writing register {address}: {result}"
-                )
-            # Refresh data after write
+                raise UpdateFailed(f"Error writing register {address}: {result}")
             await self.async_request_refresh()
         except UpdateFailed:
             raise
@@ -176,7 +180,10 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
 
     @staticmethod
     def get_sensor_value(
-        data: dict[int, int], address: int, data_type: RegisterDataType, scale: float | None
+        data: dict[int, int],
+        address: int,
+        data_type: RegisterDataType,
+        scale: float | None,
     ) -> float | int | None:
         """Parse a register value with type and scale handling."""
         raw = data.get(address)

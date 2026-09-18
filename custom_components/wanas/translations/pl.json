@@ -112,5 +112,110 @@
     "abort": {
       "already_configured": "To urządzenie jest już skonfigurowane."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje Wanas",
+        "description": "Dostosuj interwał odpytywania lub ponownie edytuj konfigurację rejestrów.",
+        "data": {
+          "scan_interval": "Interwał skanowania (sekundy)",
+          "configure_registers": "Ponownie skonfiguruj adresy rejestrów"
+        }
+      },
+      "registers": {
+        "title": "Konfiguracja rejestrów",
+        "description": "Dostosuj nazwy encji i adresy rejestrów Modbus.",
+        "sections": {
+          "sensors": {
+            "name": "Sensory",
+            "data": {
+              "supply_airflow_name": "Wydatek nawiewu (nazwa)",
+              "supply_airflow_address": "Wydatek nawiewu (adres)",
+              "exhaust_airflow_name": "Wydatek wywiewu (nazwa)",
+              "exhaust_airflow_address": "Wydatek wywiewu (adres)",
+              "supply_fan_speed_name": "Bieg nawiewu (nazwa)",
+              "supply_fan_speed_address": "Bieg nawiewu (adres)",
+              "exhaust_fan_speed_name": "Bieg wywiewu (nazwa)",
+              "exhaust_fan_speed_address": "Bieg wywiewu (adres)",
+              "outdoor_temperature_name": "Temperatura zewnętrzna (nazwa)",
+              "outdoor_temperature_address": "Temperatura zewnętrzna (adres)",
+              "exhaust_temperature_name": "Temperatura wyrzutowa (nazwa)",
+              "exhaust_temperature_address": "Temperatura wyrzutowa (adres)",
+              "supply_temperature_name": "Temperatura nawiewu (nazwa)",
+              "supply_temperature_address": "Temperatura nawiewu (adres)",
+              "indoor_temperature_name": "Temperatura wewnątrz (nazwa)",
+              "indoor_temperature_address": "Temperatura wewnątrz (adres)",
+              "current_temperature_name": "Aktualna temperatura (nazwa)",
+              "current_temperature_address": "Aktualna temperatura (adres)",
+              "filter_replacement_name": "Wymiana filtra (nazwa)",
+              "filter_replacement_address": "Wymiana filtra (adres)",
+              "system_errors_name": "Błędy systemu (nazwa)",
+              "system_errors_address": "Błędy systemu (adres)"
+            }
+          },
+          "binary_sensors": {
+            "name": "Sensory binarne",
+            "data": {
+              "gwc_state_name": "Stan GWC (nazwa)",
+              "gwc_state_address": "Stan GWC (adres)",
+              "bypass_state_name": "Stan bypass (nazwa)",
+              "bypass_state_address": "Stan bypass (adres)",
+              "humidifier_state_name": "Stan nawilżacza (nazwa)",
+              "humidifier_state_address": "Stan nawilżacza (adres)",
+              "heater_state_name": "Stan nagrzewnicy (nazwa)",
+              "heater_state_address": "Stan nagrzewnicy (adres)",
+              "cooler_state_name": "Stan chłodnicy (nazwa)",
+              "cooler_state_address": "Stan chłodnicy (adres)",
+              "vacation_mode_name": "Tryb urlopowy (nazwa)",
+              "vacation_mode_address": "Tryb urlopowy (adres)"
+            }
+          },
+          "switches": {
+            "name": "Przełączniki",
+            "data": {
+              "gwc_name": "GWC (nazwa)",
+              "gwc_write_address": "GWC (adres zapisu)",
+              "gwc_verify_address": "GWC (adres weryfikacji)",
+              "bypass_name": "Bypass (nazwa)",
+              "bypass_write_address": "Bypass (adres zapisu)",
+              "bypass_verify_address": "Bypass (adres weryfikacji)",
+              "humidifier_name": "Nawilżacz (nazwa)",
+              "humidifier_write_address": "Nawilżacz (adres zapisu)",
+              "humidifier_verify_address": "Nawilżacz (adres weryfikacji)",
+              "heater_name": "Nagrzewnica (nazwa)",
+              "heater_write_address": "Nagrzewnica (adres zapisu)",
+              "heater_verify_address": "Nagrzewnica (adres weryfikacji)",
+              "cooler_name": "Chłodnica (nazwa)",
+              "cooler_write_address": "Chłodnica (adres zapisu)",
+              "cooler_verify_address": "Chłodnica (adres weryfikacji)",
+              "hood_name": "Okap (nazwa)",
+              "hood_write_address": "Okap (adres zapisu)",
+              "hood_verify_address": "Okap (adres weryfikacji)"
+            }
+          },
+          "numbers": {
+            "name": "Wartości liczbowe",
+            "data": {
+              "vacation_name": "Urlop (nazwa)",
+              "vacation_write_address": "Urlop (adres zapisu)",
+              "vacation_verify_address": "Urlop (adres weryfikacji)",
+              "fireplace_name": "Kominek (nazwa)",
+              "fireplace_write_address": "Kominek (adres zapisu)",
+              "fireplace_verify_address": "Kominek (adres weryfikacji)",
+              "party_name": "Impreza (nazwa)",
+              "party_write_address": "Impreza (adres zapisu)",
+              "party_verify_address": "Impreza (adres weryfikacji)",
+              "fan_speed_1_name": "Bieg I (nazwa)",
+              "fan_speed_1_write_address": "Bieg I (adres zapisu)",
+              "fan_speed_1_verify_address": "Bieg I (adres weryfikacji)",
+              "fan_speed_3_name": "Bieg III (nazwa)",
+              "fan_speed_3_write_address": "Bieg III (adres zapisu)",
+              "fan_speed_3_verify_address": "Bieg III (adres weryfikacji)"
+            }
+          }
+        }
+      }
+    }
   }
 }

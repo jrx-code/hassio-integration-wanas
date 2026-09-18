@@ -19,6 +19,7 @@ Monitor temperatures, airflow, fan speeds, filter status — and toggle bypass, 
 - **Advanced mode** — full Modbus register address customization for non-standard device configurations
 - **Efficient polling** — automatic grouping of register reads into contiguous blocks to minimize Modbus traffic
 - **Auto-reconnect** — handles connection drops gracefully
+- **Configurable scan interval** — change polling rate later via **Configure** (5–300 s)
 
 ## Installation
 
@@ -49,15 +50,24 @@ Monitor temperatures, airflow, fan speeds, filter status — and toggle bypass, 
 
 4. The integration will test the connection before saving
 
-### Advanced: Custom Register Addresses
+### Options / Configure (after setup)
 
-If your device uses non-standard register mapping:
+Open the integration → **Configure** to:
+
+- Change the **scan interval** (default `30` s, range `5`–`300` s)
+- Optionally re-edit entity names and Modbus register addresses
+
+Saving options reloads the integration automatically.
+
+### Advanced: Custom Register Addresses (during setup)
+
+If your device uses non-standard register mapping **when adding** the integration:
 
 1. Enable **Advanced Mode** in your Home Assistant user profile
 2. Add the integration — after successful connection test, a second step appears
 3. Modify any register address (all fields are pre-filled with defaults)
 
-This is useful for custom firmware or alternative Wanas device variants.
+You can also re-edit registers later via **Configure** (see above).
 
 ## Entities
 
@@ -113,7 +123,7 @@ This is useful for custom firmware or alternative Wanas device variants.
 
 **Sensors show "Unknown"**
 - The device may not support all registers — this is normal for some variants
-- In Advanced Mode, you can remap registers to match your device
+- Remap registers via Advanced setup or later via **Configure**
 
 ## License
 

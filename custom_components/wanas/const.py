@@ -14,11 +14,14 @@ DOMAIN = "wanas"
 DEFAULT_PORT = 502
 DEFAULT_SLAVE_ID = 1
 DEFAULT_SCAN_INTERVAL = 30
+MIN_SCAN_INTERVAL = 5
+MAX_SCAN_INTERVAL = 300
 
 CONF_SLAVE_ID = "slave_id"
 CONF_PROTOCOL = "protocol"
 CONF_REGISTERS = "registers"
 CONF_SHOW_ADVANCED = "show_advanced"
+CONF_SCAN_INTERVAL = "scan_interval"
 
 PROTOCOL_RTU_OVER_TCP = "rtu_over_tcp"
 PROTOCOL_TCP = "tcp"
@@ -301,6 +304,7 @@ NUMBER_DESCRIPTIONS: tuple[WanasNumberDescription, ...] = (
         unit=PERCENTAGE,
     ),
 )
+
 
 def get_default_registers() -> dict[str, int]:
     """Build default register address mapping from descriptions."""

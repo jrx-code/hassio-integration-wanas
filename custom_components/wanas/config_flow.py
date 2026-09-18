@@ -1,4 +1,4 @@
-"""Config flow for the Wanas integration."""
+"""Config flow for Wanas integration."""
 
 from __future__ import annotations
 
@@ -6,14 +6,19 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
-from homeassistant.helpers import selector
 
 from .const import (
     BINARY_SENSOR_DESCRIPTIONS,
+    CONF_CONFIGURE_REGISTERS,
     CONF_PROTOCOL,
     CONF_REGISTERS,
     CONF_SCAN_INTERVAL,
@@ -43,22 +48,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_SHOW_ADVANCED, default=False): bool,
     }
 )
-
-
-def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Flatten nested section data into a single dict."""
-    flat: dict[str, Any] = {}
-    for value in user_input.values():
-        if isinstance(value, dict):
-            flat.update(value)
-        else:
-            flat[value] = value  # pragma: no cover - defensive
-    # Prefer only dict sections; top-level non-dicts are ignored for registers
-    flat = {}
-    for value in user_input.values():
-        if isinstance(value, dict):
-            flat.update(value)
-    return flat
 
 
 def _build_register_schema(defaults: dict[str, int | str]) -> vol.Schema:
@@ -113,6 +102,15 @@ def _build_register_schema(defaults: dict[str, int | str]) -> vol.Schema:
     )
 
 
+def _flatten_register_sections(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Flatten nested section data into a single dict."""
+    flat: dict[str, Any] = {}
+    for value in user_input.values():
+        if isinstance(value, dict):
+            flat.update(value)
+    return flat
+
+
 class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Wanas."""
 
@@ -125,8 +123,8 @@ class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return WanasOptionsFlow()
+        """Create the options flow."""
+        return WanasOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -135,14 +133,14 @@ class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            ok = await async_test_connection(
+            error = await async_test_connection(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
                 user_input[CONF_SLAVE_ID],
                 user_input[CONF_PROTOCOL],
             )
-            if not ok:
-                errors["base"] = "cannot_connect"
+            if error:
+                errors["base"] = error
             else:
                 show_advanced = user_input.pop(CONF_SHOW_ADVANCED, False)
                 await self.async_set_unique_id(
@@ -172,7 +170,7 @@ class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
         defaults = get_default_register_config()
 
         if user_input is not None:
-            flat = _flatten_sections(user_input)
+            flat = _flatten_register_sections(user_input)
             return self.async_create_entry(
                 title=f"Wanas ({self._connection_data[CONF_HOST]})",
                 data=self._connection_data,
@@ -185,42 +183,41 @@ class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class WanasOptionsFlow(OptionsFlow):
-    """Handle Wanas options (scan interval + register remapping)."""
+class WanasOptionsFlowHandler(OptionsFlow):
+    """Handle Wanas options."""
+
+    def __init__(self) -> None:
+        """Initialize options flow."""
+        self._options: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage Wanas options."""
+        """Manage the options."""
+        current = self.config_entry.options
+        current_interval = current.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
         if user_input is not None:
-            self._scan_interval = user_input[CONF_SCAN_INTERVAL]
-            if user_input.get("configure_registers"):
+            configure_registers = user_input.pop(CONF_CONFIGURE_REGISTERS, False)
+            self._options = {
+                CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
+                CONF_REGISTERS: current.get(CONF_REGISTERS, {}),
+            }
+            if configure_registers:
                 return await self.async_step_registers()
+            return self.async_create_entry(title="", data=self._options)
 
-            return self.async_create_entry(
-                title="",
-                data={
-                    CONF_SCAN_INTERVAL: self._scan_interval,
-                    CONF_REGISTERS: self.config_entry.options.get(CONF_REGISTERS, {}),
-                },
-            )
-
-        current = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_SCAN_INTERVAL, default=current): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=MIN_SCAN_INTERVAL,
-                            max=MAX_SCAN_INTERVAL,
-                            mode=selector.NumberSelectorMode.BOX,
-                            unit_of_measurement="s",
-                        )
+                    vol.Required(
+                        CONF_SCAN_INTERVAL, default=current_interval
+                    ): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
                     ),
-                    vol.Optional("configure_registers", default=False): bool,
+                    vol.Optional(CONF_CONFIGURE_REGISTERS, default=False): bool,
                 }
             ),
         )
@@ -228,27 +225,16 @@ class WanasOptionsFlow(OptionsFlow):
     async def async_step_registers(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Edit register addresses and names."""
+        """Re-edit register addresses and names."""
         defaults = {
             **get_default_register_config(),
             **self.config_entry.options.get(CONF_REGISTERS, {}),
         }
 
         if user_input is not None:
-            flat = _flatten_sections(user_input)
-            return self.async_create_entry(
-                title="",
-                data={
-                    CONF_SCAN_INTERVAL: getattr(
-                        self,
-                        "_scan_interval",
-                        self.config_entry.options.get(
-                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                        ),
-                    ),
-                    CONF_REGISTERS: flat,
-                },
-            )
+            flat = _flatten_register_sections(user_input)
+            self._options[CONF_REGISTERS] = flat
+            return self.async_create_entry(title="", data=self._options)
 
         return self.async_show_form(
             step_id="registers",

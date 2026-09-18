@@ -27,6 +27,7 @@ CONF_PROTOCOL = "protocol"
 CONF_REGISTERS = "registers"
 CONF_SHOW_ADVANCED = "show_advanced"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_CONFIGURE_REGISTERS = "configure_registers"
 
 PROTOCOL_RTU_OVER_TCP = "rtu_over_tcp"
 PROTOCOL_TCP = "tcp"

@@ -27,15 +27,35 @@ async def async_get_config_entry_diagnostics(
     coordinator: WanasCoordinator = entry.runtime_data
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
+    register_addresses = {
+        key: value
+        for key, value in coordinator.registers.items()
+        if key.endswith("_address") and isinstance(value, int)
+    }
+
     return {
-        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
+        "entry": async_redact_data(
+            {
+                "title": entry.title,
+                "domain": entry.domain,
+                "data": dict(entry.data),
+                "options": dict(entry.options),
+            },
+            TO_REDACT,
+        ),
         "protocol": entry.data.get(CONF_PROTOCOL),
         "slave_id": entry.data.get(CONF_SLAVE_ID),
         "scan_interval": scan_interval,
-        "registers": coordinator.registers,
+        "update_interval_seconds": (
+            coordinator.update_interval.total_seconds()
+            if coordinator.update_interval
+            else None
+        ),
+        "register_addresses": register_addresses,
         "read_blocks": [
             {"start": start, "count": count}
             for start, count in coordinator.read_blocks
         ],
         "last_update_success": coordinator.last_update_success,
+        "data_keys": sorted(coordinator.data.keys()) if coordinator.data else [],
     }

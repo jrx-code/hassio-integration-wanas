@@ -1,4 +1,4 @@
-"""Config flow for Wanas integration."""
+"""Config flow for the Wanas integration."""
 
 from __future__ import annotations
 
@@ -200,9 +200,11 @@ class WanasOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             configure_registers = user_input.pop(CONF_CONFIGURE_REGISTERS, False)
             self._options = {
-                CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
-                CONF_REGISTERS: current.get(CONF_REGISTERS, {}),
+                CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
             }
+            # Preserve existing register map unless the user re-edits it
+            if CONF_REGISTERS in current:
+                self._options[CONF_REGISTERS] = current[CONF_REGISTERS]
             if configure_registers:
                 return await self.async_step_registers()
             return self.async_create_entry(title="", data=self._options)

@@ -94,6 +94,12 @@ You can also re-edit registers later via **Configure** (see above).
 | Bieg I | 46 | — | Fan speed level 1 |
 | Bieg III | 47 | — | Fan speed level 3 |
 | Okap — stan | 48 | — | Hood state |
+| Temperatura pokój | 65 | °C | Room temperature (maxiCONTROL) |
+| Temperatura łazienka 1 | 66 | °C | Bathroom 1 temperature (maxiCONTROL) |
+| Temperatura łazienka 2 | 67 | °C | Bathroom 2 temperature (maxiCONTROL) |
+| Wilgotność pokój | 55 | % | Room humidity (maxiCONTROL) |
+| Wilgotność łazienka 1 | 56 | % | Bathroom 1 humidity (maxiCONTROL) |
+| Wilgotność łazienka 2 | 57 | % | Bathroom 2 humidity (maxiCONTROL) |
 
 ### Switches
 

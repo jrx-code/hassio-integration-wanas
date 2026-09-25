@@ -9,3 +9,9 @@ Temperatura nawiewowa,6,R,Skala 0.1 ,°C
 Temperatura pomieszczenia,7,R,Skala 0.1 (z czujnika w sterowniku) ,°C
 Temperatura EXTRA,29,R,Dodatkowy czujnik (np. GWC lub kanałowy) ,°C
 Wymiana filtra,36,R,Dni pozostałe do wymiany (0 = wymiana wymagana) ,dni
+Temperatura pokój,65,R,Dodatkowy czujnik maxiCONTROL. Skala 0.1 ,°C
+Temperatura łazienka 1,66,R,Dodatkowy czujnik maxiCONTROL. Skala 0.1 ,°C
+Temperatura łazienka 2,67,R,Dodatkowy czujnik maxiCONTROL. Skala 0.1 ,°C
+Wilgotność pokój,55,R,Dodatkowy czujnik maxiCONTROL. Skala 0.1 ,%
+Wilgotność łazienka 1,56,R,Dodatkowy czujnik maxiCONTROL. Skala 0.1 ,%
+Wilgotność łazienka 2,57,R,Dodatkowy czujnik maxiCONTROL. Skala 0.1 ,%

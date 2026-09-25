@@ -40,7 +40,19 @@
               "filter_replacement_name": "Filter Replacement (name)",
               "filter_replacement_address": "Filter Replacement (address)",
               "system_errors_name": "System Errors (name)",
-              "system_errors_address": "System Errors (address)"
+              "system_errors_address": "System Errors (address)",
+              "room_temperature_name": "Room Temperature (name)",
+              "room_temperature_address": "Room Temperature (address)",
+              "bathroom_1_temperature_name": "Bathroom 1 Temperature (name)",
+              "bathroom_1_temperature_address": "Bathroom 1 Temperature (address)",
+              "bathroom_2_temperature_name": "Bathroom 2 Temperature (name)",
+              "bathroom_2_temperature_address": "Bathroom 2 Temperature (address)",
+              "room_humidity_name": "Room Humidity (name)",
+              "room_humidity_address": "Room Humidity (address)",
+              "bathroom_1_humidity_name": "Bathroom 1 Humidity (name)",
+              "bathroom_1_humidity_address": "Bathroom 1 Humidity (address)",
+              "bathroom_2_humidity_name": "Bathroom 2 Humidity (name)",
+              "bathroom_2_humidity_address": "Bathroom 2 Humidity (address)"
             }
           },
           "binary_sensors": {
@@ -151,7 +163,19 @@
               "filter_replacement_name": "Filter Replacement (name)",
               "filter_replacement_address": "Filter Replacement (address)",
               "system_errors_name": "System Errors (name)",
-              "system_errors_address": "System Errors (address)"
+              "system_errors_address": "System Errors (address)",
+              "room_temperature_name": "Room Temperature (name)",
+              "room_temperature_address": "Room Temperature (address)",
+              "bathroom_1_temperature_name": "Bathroom 1 Temperature (name)",
+              "bathroom_1_temperature_address": "Bathroom 1 Temperature (address)",
+              "bathroom_2_temperature_name": "Bathroom 2 Temperature (name)",
+              "bathroom_2_temperature_address": "Bathroom 2 Temperature (address)",
+              "room_humidity_name": "Room Humidity (name)",
+              "room_humidity_address": "Room Humidity (address)",
+              "bathroom_1_humidity_name": "Bathroom 1 Humidity (name)",
+              "bathroom_1_humidity_address": "Bathroom 1 Humidity (address)",
+              "bathroom_2_humidity_name": "Bathroom 2 Humidity (name)",
+              "bathroom_2_humidity_address": "Bathroom 2 Humidity (address)"
             }
           },
           "binary_sensors": {

@@ -40,7 +40,19 @@
               "filter_replacement_name": "Wymiana filtra (nazwa)",
               "filter_replacement_address": "Wymiana filtra (adres)",
               "system_errors_name": "Błędy systemu (nazwa)",
-              "system_errors_address": "Błędy systemu (adres)"
+              "system_errors_address": "Błędy systemu (adres)",
+              "room_temperature_name": "Temperatura pokój (nazwa)",
+              "room_temperature_address": "Temperatura pokój (adres)",
+              "bathroom_1_temperature_name": "Temperatura łazienka 1 (nazwa)",
+              "bathroom_1_temperature_address": "Temperatura łazienka 1 (adres)",
+              "bathroom_2_temperature_name": "Temperatura łazienka 2 (nazwa)",
+              "bathroom_2_temperature_address": "Temperatura łazienka 2 (adres)",
+              "room_humidity_name": "Wilgotność pokój (nazwa)",
+              "room_humidity_address": "Wilgotność pokój (adres)",
+              "bathroom_1_humidity_name": "Wilgotność łazienka 1 (nazwa)",
+              "bathroom_1_humidity_address": "Wilgotność łazienka 1 (adres)",
+              "bathroom_2_humidity_name": "Wilgotność łazienka 2 (nazwa)",
+              "bathroom_2_humidity_address": "Wilgotność łazienka 2 (adres)"
             }
           },
           "binary_sensors": {
@@ -151,7 +163,19 @@
               "filter_replacement_name": "Wymiana filtra (nazwa)",
               "filter_replacement_address": "Wymiana filtra (adres)",
               "system_errors_name": "Błędy systemu (nazwa)",
-              "system_errors_address": "Błędy systemu (adres)"
+              "system_errors_address": "Błędy systemu (adres)",
+              "room_temperature_name": "Temperatura pokój (nazwa)",
+              "room_temperature_address": "Temperatura pokój (adres)",
+              "bathroom_1_temperature_name": "Temperatura łazienka 1 (nazwa)",
+              "bathroom_1_temperature_address": "Temperatura łazienka 1 (adres)",
+              "bathroom_2_temperature_name": "Temperatura łazienka 2 (nazwa)",
+              "bathroom_2_temperature_address": "Temperatura łazienka 2 (adres)",
+              "room_humidity_name": "Wilgotność pokój (nazwa)",
+              "room_humidity_address": "Wilgotność pokój (adres)",
+              "bathroom_1_humidity_name": "Wilgotność łazienka 1 (nazwa)",
+              "bathroom_1_humidity_address": "Wilgotność łazienka 1 (adres)",
+              "bathroom_2_humidity_name": "Wilgotność łazienka 2 (nazwa)",
+              "bathroom_2_humidity_address": "Wilgotność łazienka 2 (adres)"
             }
           },
           "binary_sensors": {

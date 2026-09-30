@@ -7,3 +7,6 @@ dist/
 .claude/
 # Device configuration dump — contains the converter's LAN address and admin password
 config/hardware/waveshare-485-eth.json
+.pytest_cache/
+.coverage
+htmlcov/

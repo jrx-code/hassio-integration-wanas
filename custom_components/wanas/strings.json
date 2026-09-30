@@ -3,13 +3,17 @@
     "step": {
       "user": {
         "title": "Wanas Rekuperator",
-        "description": "Configure connection to Wanas recuperator via Modbus.",
+        "description": "Configure connection to Wanas recuperator via Modbus. Clear a module the unit does not have and its entities will not be created.",
         "data": {
           "host": "Host",
           "port": "Port",
           "slave_id": "Slave ID",
           "protocol": "Protocol",
-          "show_advanced": "Show advanced configuration"
+          "show_advanced": "Show advanced configuration",
+          "has_heater": "Unit has a heater",
+          "has_cooler": "Unit has a cooler",
+          "has_humidifier": "Unit has a humidifier",
+          "has_maxicontrol": "Unit has maxiCONTROL room panels"
         }
       },
       "registers": {
@@ -19,53 +23,73 @@
           "sensors": {
             "name": "Sensors",
             "data": {
-              "supply_airflow_name": "Supply Airflow (name)",
-              "supply_airflow_address": "Supply Airflow (address)",
-              "exhaust_airflow_name": "Exhaust Airflow (name)",
-              "exhaust_airflow_address": "Exhaust Airflow (address)",
-              "supply_fan_speed_name": "Supply Fan Speed (name)",
-              "supply_fan_speed_address": "Supply Fan Speed (address)",
-              "exhaust_fan_speed_name": "Exhaust Fan Speed (name)",
-              "exhaust_fan_speed_address": "Exhaust Fan Speed (address)",
-              "outdoor_temperature_name": "Outdoor Temperature (name)",
-              "outdoor_temperature_address": "Outdoor Temperature (address)",
-              "exhaust_temperature_name": "Exhaust Temperature (name)",
-              "exhaust_temperature_address": "Exhaust Temperature (address)",
-              "supply_temperature_name": "Supply Temperature (name)",
-              "supply_temperature_address": "Supply Temperature (address)",
-              "indoor_temperature_name": "Indoor Temperature (name)",
-              "indoor_temperature_address": "Indoor Temperature (address)",
-              "current_temperature_name": "Current Temperature (name)",
-              "current_temperature_address": "Current Temperature (address)",
-              "filter_replacement_name": "Filter Replacement (name)",
-              "filter_replacement_address": "Filter Replacement (address)",
-              "system_errors_name": "System Errors (name)",
-              "system_errors_address": "System Errors (address)"
+              "supply_airflow_name": "Supply airflow (name)",
+              "supply_airflow_address": "Supply airflow (address)",
+              "exhaust_airflow_name": "Exhaust airflow (name)",
+              "exhaust_airflow_address": "Exhaust airflow (address)",
+              "supply_fan_speed_name": "Supply fan speed (name)",
+              "supply_fan_speed_address": "Supply fan speed (address)",
+              "exhaust_fan_speed_name": "Exhaust fan speed (name)",
+              "exhaust_fan_speed_address": "Exhaust fan speed (address)",
+              "outdoor_temperature_name": "Outdoor temperature (name)",
+              "outdoor_temperature_address": "Outdoor temperature (address)",
+              "exhaust_temperature_name": "Exhaust temperature (name)",
+              "exhaust_temperature_address": "Exhaust temperature (address)",
+              "supply_temperature_name": "Supply temperature (name)",
+              "supply_temperature_address": "Supply temperature (address)",
+              "indoor_temperature_name": "Room temperature (name)",
+              "indoor_temperature_address": "Room temperature (address)",
+              "current_temperature_name": "Extra probe temperature (name)",
+              "current_temperature_address": "Extra probe temperature (address)",
+              "filter_replacement_name": "Filter replacement (name)",
+              "filter_replacement_address": "Filter replacement (address)",
+              "system_errors_name": "System errors (name)",
+              "system_errors_address": "System errors (address)",
+              "room_temperature_name": "Room temperature (name)",
+              "room_temperature_address": "Room temperature (address)",
+              "bathroom_1_temperature_name": "Bathroom 1 temperature (name)",
+              "bathroom_1_temperature_address": "Bathroom 1 temperature (address)",
+              "bathroom_2_temperature_name": "Bathroom 2 temperature (name)",
+              "bathroom_2_temperature_address": "Bathroom 2 temperature (address)",
+              "room_humidity_name": "Room humidity (name)",
+              "room_humidity_address": "Room humidity (address)",
+              "bathroom_1_humidity_name": "Bathroom 1 humidity (name)",
+              "bathroom_1_humidity_address": "Bathroom 1 humidity (address)",
+              "bathroom_2_humidity_name": "Bathroom 2 humidity (name)",
+              "bathroom_2_humidity_address": "Bathroom 2 humidity (address)"
             }
           },
           "binary_sensors": {
             "name": "Binary Sensors",
             "data": {
-              "gwc_state_name": "GWC State (name)",
-              "gwc_state_address": "GWC State (address)",
-              "bypass_state_name": "Bypass State (name)",
-              "bypass_state_address": "Bypass State (address)",
-              "humidifier_state_name": "Humidifier State (name)",
-              "humidifier_state_address": "Humidifier State (address)",
-              "heater_state_name": "Heater State (name)",
-              "heater_state_address": "Heater State (address)",
-              "cooler_state_name": "Cooler State (name)",
-              "cooler_state_address": "Cooler State (address)",
-              "vacation_mode_name": "Vacation Mode (name)",
-              "vacation_mode_address": "Vacation Mode (address)"
+              "gwc_state_name": "Ground heat exchanger state (name)",
+              "gwc_state_address": "Ground heat exchanger state (address)",
+              "bypass_state_name": "Bypass state (name)",
+              "bypass_state_address": "Bypass state (address)",
+              "humidifier_state_name": "Humidifier state (name)",
+              "humidifier_state_address": "Humidifier state (address)",
+              "heater_state_name": "Heater state (name)",
+              "heater_state_address": "Heater state (address)",
+              "cooler_state_name": "Cooler state (name)",
+              "cooler_state_address": "Cooler state (address)",
+              "vacation_mode_name": "Vacation mode (name)",
+              "vacation_mode_address": "Vacation mode (address)",
+              "input_speed_1_name": "Speed 1 input (name)",
+              "input_speed_1_address": "Speed 1 input (address)",
+              "input_speed_3_name": "Speed 3 input (name)",
+              "input_speed_3_address": "Speed 3 input (address)",
+              "input_hood_name": "Hood input (name)",
+              "input_hood_address": "Hood input (address)",
+              "input_fire_alarm_name": "Fire alarm input (name)",
+              "input_fire_alarm_address": "Fire alarm input (address)"
             }
           },
           "switches": {
             "name": "Switches",
             "data": {
-              "gwc_name": "GWC (name)",
-              "gwc_write_address": "GWC (write address)",
-              "gwc_verify_address": "GWC (verify address)",
+              "gwc_name": "Ground heat exchanger (name)",
+              "gwc_write_address": "Ground heat exchanger (write address)",
+              "gwc_verify_address": "Ground heat exchanger (verify address)",
               "bypass_name": "Bypass (name)",
               "bypass_write_address": "Bypass (write address)",
               "bypass_verify_address": "Bypass (verify address)",
@@ -77,30 +101,78 @@
               "heater_verify_address": "Heater (verify address)",
               "cooler_name": "Cooler (name)",
               "cooler_write_address": "Cooler (write address)",
-              "cooler_verify_address": "Cooler (verify address)",
-              "hood_name": "Hood (name)",
-              "hood_write_address": "Hood (write address)",
-              "hood_verify_address": "Hood (verify address)"
+              "cooler_verify_address": "Cooler (verify address)"
             }
           },
           "numbers": {
             "name": "Numbers",
             "data": {
-              "vacation_name": "Vacation (name)",
-              "vacation_write_address": "Vacation (write address)",
-              "vacation_verify_address": "Vacation (verify address)",
+              "heater_days_name": "Heater days (name)",
+              "heater_days_write_address": "Heater days (write address)",
+              "heater_days_verify_address": "Heater days (verify address)",
+              "cooler_days_name": "Cooler days (name)",
+              "cooler_days_write_address": "Cooler days (write address)",
+              "cooler_days_verify_address": "Cooler days (verify address)",
+              "vacation_name": "Vacation days (name)",
+              "vacation_write_address": "Vacation days (write address)",
+              "vacation_verify_address": "Vacation days (verify address)",
               "fireplace_name": "Fireplace (name)",
               "fireplace_write_address": "Fireplace (write address)",
               "fireplace_verify_address": "Fireplace (verify address)",
               "party_name": "Party (name)",
               "party_write_address": "Party (write address)",
               "party_verify_address": "Party (verify address)",
-              "fan_speed_1_name": "Fan Speed 1 (name)",
-              "fan_speed_1_write_address": "Fan Speed 1 (write address)",
-              "fan_speed_1_verify_address": "Fan Speed 1 (verify address)",
-              "fan_speed_3_name": "Fan Speed 3 (name)",
-              "fan_speed_3_write_address": "Fan Speed 3 (write address)",
-              "fan_speed_3_verify_address": "Fan Speed 3 (verify address)"
+              "zone_1_end_name": "Zone 1 end (name)",
+              "zone_1_end_write_address": "Zone 1 end (write address)",
+              "zone_1_end_verify_address": "Zone 1 end (verify address)",
+              "zone_2_end_name": "Zone 2 end (name)",
+              "zone_2_end_write_address": "Zone 2 end (write address)",
+              "zone_2_end_verify_address": "Zone 2 end (verify address)",
+              "zone_3_end_name": "Zone 3 end (name)",
+              "zone_3_end_write_address": "Zone 3 end (write address)",
+              "zone_3_end_verify_address": "Zone 3 end (verify address)",
+              "zone_4_end_name": "Zone 4 end (name)",
+              "zone_4_end_write_address": "Zone 4 end (write address)",
+              "zone_4_end_verify_address": "Zone 4 end (verify address)",
+              "zone_1_speed_name": "Zone 1 fan speed (name)",
+              "zone_1_speed_write_address": "Zone 1 fan speed (write address)",
+              "zone_1_speed_verify_address": "Zone 1 fan speed (verify address)",
+              "zone_2_speed_name": "Zone 2 fan speed (name)",
+              "zone_2_speed_write_address": "Zone 2 fan speed (write address)",
+              "zone_2_speed_verify_address": "Zone 2 fan speed (verify address)",
+              "zone_3_speed_name": "Zone 3 fan speed (name)",
+              "zone_3_speed_write_address": "Zone 3 fan speed (write address)",
+              "zone_3_speed_verify_address": "Zone 3 fan speed (verify address)",
+              "zone_4_speed_name": "Zone 4 fan speed (name)",
+              "zone_4_speed_write_address": "Zone 4 fan speed (write address)",
+              "zone_4_speed_verify_address": "Zone 4 fan speed (verify address)",
+              "zone_5_speed_name": "Zone 5 fan speed (name)",
+              "zone_5_speed_write_address": "Zone 5 fan speed (write address)",
+              "zone_5_speed_verify_address": "Zone 5 fan speed (verify address)",
+              "zone_1_temperature_name": "Zone 1 temperature (name)",
+              "zone_1_temperature_write_address": "Zone 1 temperature (write address)",
+              "zone_1_temperature_verify_address": "Zone 1 temperature (verify address)",
+              "zone_2_temperature_name": "Zone 2 temperature (name)",
+              "zone_2_temperature_write_address": "Zone 2 temperature (write address)",
+              "zone_2_temperature_verify_address": "Zone 2 temperature (verify address)",
+              "zone_3_temperature_name": "Zone 3 temperature (name)",
+              "zone_3_temperature_write_address": "Zone 3 temperature (write address)",
+              "zone_3_temperature_verify_address": "Zone 3 temperature (verify address)",
+              "zone_4_temperature_name": "Zone 4 temperature (name)",
+              "zone_4_temperature_write_address": "Zone 4 temperature (write address)",
+              "zone_4_temperature_verify_address": "Zone 4 temperature (verify address)",
+              "zone_5_temperature_name": "Zone 5 temperature (name)",
+              "zone_5_temperature_write_address": "Zone 5 temperature (write address)",
+              "zone_5_temperature_verify_address": "Zone 5 temperature (verify address)",
+              "fan_power_1_name": "Fan power 1 (name)",
+              "fan_power_1_write_address": "Fan power 1 (write address)",
+              "fan_power_1_verify_address": "Fan power 1 (verify address)",
+              "fan_power_2_name": "Fan power 2 (name)",
+              "fan_power_2_write_address": "Fan power 2 (write address)",
+              "fan_power_2_verify_address": "Fan power 2 (verify address)",
+              "fan_power_3_name": "Fan power 3 (name)",
+              "fan_power_3_write_address": "Fan power 3 (write address)",
+              "fan_power_3_verify_address": "Fan power 3 (verify address)"
             }
           }
         }
@@ -113,107 +185,189 @@
       "already_configured": "This device is already configured."
     }
   },
+  "entity": {
+    "sensor": {
+      "supply_airflow": {
+        "name": "Supply airflow"
+      },
+      "exhaust_airflow": {
+        "name": "Exhaust airflow"
+      },
+      "supply_fan_speed": {
+        "name": "Supply fan speed"
+      },
+      "exhaust_fan_speed": {
+        "name": "Exhaust fan speed"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "exhaust_temperature": {
+        "name": "Exhaust temperature"
+      },
+      "supply_temperature": {
+        "name": "Supply temperature"
+      },
+      "indoor_temperature": {
+        "name": "Room temperature"
+      },
+      "current_temperature": {
+        "name": "Extra probe temperature"
+      },
+      "filter_replacement": {
+        "name": "Filter replacement"
+      },
+      "system_errors": {
+        "name": "System errors"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "bathroom_1_temperature": {
+        "name": "Bathroom 1 temperature"
+      },
+      "bathroom_2_temperature": {
+        "name": "Bathroom 2 temperature"
+      },
+      "room_humidity": {
+        "name": "Room humidity"
+      },
+      "bathroom_1_humidity": {
+        "name": "Bathroom 1 humidity"
+      },
+      "bathroom_2_humidity": {
+        "name": "Bathroom 2 humidity"
+      }
+    },
+    "binary_sensor": {
+      "gwc_state": {
+        "name": "Ground heat exchanger state"
+      },
+      "bypass_state": {
+        "name": "Bypass state"
+      },
+      "humidifier_state": {
+        "name": "Humidifier state"
+      },
+      "heater_state": {
+        "name": "Heater state"
+      },
+      "cooler_state": {
+        "name": "Cooler state"
+      },
+      "vacation_mode": {
+        "name": "Vacation mode"
+      },
+      "input_speed_1": {
+        "name": "Speed 1 input"
+      },
+      "input_speed_3": {
+        "name": "Speed 3 input"
+      },
+      "input_hood": {
+        "name": "Hood input"
+      },
+      "input_fire_alarm": {
+        "name": "Fire alarm input"
+      }
+    },
+    "switch": {
+      "gwc": {
+        "name": "Ground heat exchanger"
+      },
+      "bypass": {
+        "name": "Bypass"
+      },
+      "humidifier": {
+        "name": "Humidifier"
+      },
+      "heater": {
+        "name": "Heater"
+      },
+      "cooler": {
+        "name": "Cooler"
+      }
+    },
+    "number": {
+      "heater_days": {
+        "name": "Heater days"
+      },
+      "cooler_days": {
+        "name": "Cooler days"
+      },
+      "vacation": {
+        "name": "Vacation days"
+      },
+      "fireplace": {
+        "name": "Fireplace"
+      },
+      "party": {
+        "name": "Party"
+      },
+      "zone_1_end": {
+        "name": "Zone 1 end"
+      },
+      "zone_2_end": {
+        "name": "Zone 2 end"
+      },
+      "zone_3_end": {
+        "name": "Zone 3 end"
+      },
+      "zone_4_end": {
+        "name": "Zone 4 end"
+      },
+      "zone_1_speed": {
+        "name": "Zone 1 fan speed"
+      },
+      "zone_2_speed": {
+        "name": "Zone 2 fan speed"
+      },
+      "zone_3_speed": {
+        "name": "Zone 3 fan speed"
+      },
+      "zone_4_speed": {
+        "name": "Zone 4 fan speed"
+      },
+      "zone_5_speed": {
+        "name": "Zone 5 fan speed"
+      },
+      "zone_1_temperature": {
+        "name": "Zone 1 temperature"
+      },
+      "zone_2_temperature": {
+        "name": "Zone 2 temperature"
+      },
+      "zone_3_temperature": {
+        "name": "Zone 3 temperature"
+      },
+      "zone_4_temperature": {
+        "name": "Zone 4 temperature"
+      },
+      "zone_5_temperature": {
+        "name": "Zone 5 temperature"
+      },
+      "fan_power_1": {
+        "name": "Fan power 1"
+      },
+      "fan_power_2": {
+        "name": "Fan power 2"
+      },
+      "fan_power_3": {
+        "name": "Fan power 3"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
-        "title": "Wanas Options",
-        "description": "Adjust polling interval or re-edit register configuration.",
+        "title": "Fitted modules",
+        "description": "Entities for a module that is not fitted are not created.",
         "data": {
-          "scan_interval": "Scan interval (seconds)",
-          "configure_registers": "Re-configure register addresses"
-        }
-      },
-      "registers": {
-        "title": "Register Configuration",
-        "description": "Customize entity names and Modbus register addresses.",
-        "sections": {
-          "sensors": {
-            "name": "Sensors",
-            "data": {
-              "supply_airflow_name": "Supply Airflow (name)",
-              "supply_airflow_address": "Supply Airflow (address)",
-              "exhaust_airflow_name": "Exhaust Airflow (name)",
-              "exhaust_airflow_address": "Exhaust Airflow (address)",
-              "supply_fan_speed_name": "Supply Fan Speed (name)",
-              "supply_fan_speed_address": "Supply Fan Speed (address)",
-              "exhaust_fan_speed_name": "Exhaust Fan Speed (name)",
-              "exhaust_fan_speed_address": "Exhaust Fan Speed (address)",
-              "outdoor_temperature_name": "Outdoor Temperature (name)",
-              "outdoor_temperature_address": "Outdoor Temperature (address)",
-              "exhaust_temperature_name": "Exhaust Temperature (name)",
-              "exhaust_temperature_address": "Exhaust Temperature (address)",
-              "supply_temperature_name": "Supply Temperature (name)",
-              "supply_temperature_address": "Supply Temperature (address)",
-              "indoor_temperature_name": "Indoor Temperature (name)",
-              "indoor_temperature_address": "Indoor Temperature (address)",
-              "current_temperature_name": "Current Temperature (name)",
-              "current_temperature_address": "Current Temperature (address)",
-              "filter_replacement_name": "Filter Replacement (name)",
-              "filter_replacement_address": "Filter Replacement (address)",
-              "system_errors_name": "System Errors (name)",
-              "system_errors_address": "System Errors (address)"
-            }
-          },
-          "binary_sensors": {
-            "name": "Binary Sensors",
-            "data": {
-              "gwc_state_name": "GWC State (name)",
-              "gwc_state_address": "GWC State (address)",
-              "bypass_state_name": "Bypass State (name)",
-              "bypass_state_address": "Bypass State (address)",
-              "humidifier_state_name": "Humidifier State (name)",
-              "humidifier_state_address": "Humidifier State (address)",
-              "heater_state_name": "Heater State (name)",
-              "heater_state_address": "Heater State (address)",
-              "cooler_state_name": "Cooler State (name)",
-              "cooler_state_address": "Cooler State (address)",
-              "vacation_mode_name": "Vacation Mode (name)",
-              "vacation_mode_address": "Vacation Mode (address)"
-            }
-          },
-          "switches": {
-            "name": "Switches",
-            "data": {
-              "gwc_name": "GWC (name)",
-              "gwc_write_address": "GWC (write address)",
-              "gwc_verify_address": "GWC (verify address)",
-              "bypass_name": "Bypass (name)",
-              "bypass_write_address": "Bypass (write address)",
-              "bypass_verify_address": "Bypass (verify address)",
-              "humidifier_name": "Humidifier (name)",
-              "humidifier_write_address": "Humidifier (write address)",
-              "humidifier_verify_address": "Humidifier (verify address)",
-              "heater_name": "Heater (name)",
-              "heater_write_address": "Heater (write address)",
-              "heater_verify_address": "Heater (verify address)",
-              "cooler_name": "Cooler (name)",
-              "cooler_write_address": "Cooler (write address)",
-              "cooler_verify_address": "Cooler (verify address)",
-              "hood_name": "Hood (name)",
-              "hood_write_address": "Hood (write address)",
-              "hood_verify_address": "Hood (verify address)"
-            }
-          },
-          "numbers": {
-            "name": "Numbers",
-            "data": {
-              "vacation_name": "Vacation (name)",
-              "vacation_write_address": "Vacation (write address)",
-              "vacation_verify_address": "Vacation (verify address)",
-              "fireplace_name": "Fireplace (name)",
-              "fireplace_write_address": "Fireplace (write address)",
-              "fireplace_verify_address": "Fireplace (verify address)",
-              "party_name": "Party (name)",
-              "party_write_address": "Party (write address)",
-              "party_verify_address": "Party (verify address)",
-              "fan_speed_1_name": "Fan Speed 1 (name)",
-              "fan_speed_1_write_address": "Fan Speed 1 (write address)",
-              "fan_speed_1_verify_address": "Fan Speed 1 (verify address)",
-              "fan_speed_3_name": "Fan Speed 3 (name)",
-              "fan_speed_3_write_address": "Fan Speed 3 (write address)",
-              "fan_speed_3_verify_address": "Fan Speed 3 (verify address)"
-            }
-          }
+          "has_heater": "Unit has a heater",
+          "has_cooler": "Unit has a cooler",
+          "has_humidifier": "Unit has a humidifier",
+          "has_maxicontrol": "Unit has maxiCONTROL room panels",
+          "scan_interval": "Polling interval (seconds)"
         }
       }
     }

@@ -1,0 +1,60 @@
+{
+  "entity": {
+    "sensor": {
+      "supply_airflow": { "default": "mdi:fan-chevron-down" },
+      "exhaust_airflow": { "default": "mdi:fan-chevron-up" },
+      "supply_fan_speed": { "default": "mdi:fan-speed-1" },
+      "exhaust_fan_speed": { "default": "mdi:fan-speed-2" },
+      "outdoor_temperature": { "default": "mdi:home-thermometer-outline" },
+      "exhaust_temperature": { "default": "mdi:thermometer-chevron-up" },
+      "supply_temperature": { "default": "mdi:thermometer-chevron-down" },
+      "indoor_temperature": { "default": "mdi:home-thermometer" },
+      "current_temperature": { "default": "mdi:thermometer-lines" },
+      "filter_replacement": { "default": "mdi:air-filter" },
+      "system_errors": { "default": "mdi:alert-circle-outline" }
+    },
+    "binary_sensor": {
+      "gwc_state": { "default": "mdi:heat-wave" },
+      "bypass_state": { "default": "mdi:pipe-disconnected" },
+      "humidifier_state": { "default": "mdi:air-humidifier" },
+      "heater_state": { "default": "mdi:radiator" },
+      "cooler_state": { "default": "mdi:snowflake" },
+      "vacation_mode": { "default": "mdi:bag-suitcase" },
+      "input_speed_1": { "default": "mdi:numeric-1-box-outline" },
+      "input_speed_3": { "default": "mdi:numeric-3-box-outline" },
+      "input_hood": { "default": "mdi:stove" },
+      "input_fire_alarm": { "default": "mdi:fire-alert" }
+    },
+    "switch": {
+      "gwc": { "default": "mdi:heat-wave" },
+      "bypass": { "default": "mdi:pipe-disconnected" },
+      "humidifier": { "default": "mdi:air-humidifier" },
+      "heater": { "default": "mdi:radiator" },
+      "cooler": { "default": "mdi:snowflake" }
+    },
+    "number": {
+      "heater_days": { "default": "mdi:radiator" },
+      "cooler_days": { "default": "mdi:snowflake" },
+      "vacation": { "default": "mdi:bag-suitcase" },
+      "fireplace": { "default": "mdi:fireplace" },
+      "party": { "default": "mdi:party-popper" },
+      "zone_1_end": { "default": "mdi:clock-end" },
+      "zone_2_end": { "default": "mdi:clock-end" },
+      "zone_3_end": { "default": "mdi:clock-end" },
+      "zone_4_end": { "default": "mdi:clock-end" },
+      "zone_1_speed": { "default": "mdi:fan" },
+      "zone_2_speed": { "default": "mdi:fan" },
+      "zone_3_speed": { "default": "mdi:fan" },
+      "zone_4_speed": { "default": "mdi:fan" },
+      "zone_5_speed": { "default": "mdi:fan" },
+      "zone_1_temperature": { "default": "mdi:thermostat" },
+      "zone_2_temperature": { "default": "mdi:thermostat" },
+      "zone_3_temperature": { "default": "mdi:thermostat" },
+      "zone_4_temperature": { "default": "mdi:thermostat" },
+      "zone_5_temperature": { "default": "mdi:thermostat" },
+      "fan_power_1": { "default": "mdi:fan-speed-1" },
+      "fan_power_2": { "default": "mdi:fan-speed-2" },
+      "fan_power_3": { "default": "mdi:fan-speed-3" }
+    }
+  }
+}

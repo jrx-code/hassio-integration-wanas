@@ -6,9 +6,6 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from pymodbus.client import AsyncModbusTcpClient, AsyncModbusUdpClient
-from pymodbus.framer import FramerType
-
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -18,15 +15,17 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
+from pymodbus.client import AsyncModbusTcpClient, AsyncModbusUdpClient
+from pymodbus.framer import FramerType
 
 from .const import (
     BINARY_SENSOR_DESCRIPTIONS,
     CONF_PROTOCOL,
     CONF_REGISTERS,
+    CONF_SCAN_INTERVAL,
     CONF_SHOW_ADVANCED,
     CONF_SLAVE_ID,
     DEFAULT_PORT,
-    CONF_SCAN_INTERVAL,
     DEFAULT_PROTOCOL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLAVE_ID,

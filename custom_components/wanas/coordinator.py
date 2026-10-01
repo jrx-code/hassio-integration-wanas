@@ -7,14 +7,13 @@ import ctypes
 import logging
 from datetime import timedelta
 
-from pymodbus.client import AsyncModbusTcpClient, AsyncModbusUdpClient
-from pymodbus.framer import FramerType
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from pymodbus.client import AsyncModbusTcpClient, AsyncModbusUdpClient
+from pymodbus.framer import FramerType
 
 from .const import (
     CONF_PROTOCOL,

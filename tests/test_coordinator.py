@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.wanas.const import (
     CONF_HAS_COOLER,
@@ -17,8 +18,6 @@ from custom_components.wanas.const import (
     DOMAIN,
 )
 from custom_components.wanas.coordinator import _build_read_blocks
-
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from .conftest import CONNECTION
 

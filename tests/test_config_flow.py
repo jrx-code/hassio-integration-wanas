@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -17,7 +16,6 @@ from custom_components.wanas.const import (
     CONF_HAS_MAXICONTROL,
     CONF_REGISTERS,
     CONF_SCAN_INTERVAL,
-    CONF_SLAVE_ID,
     DOMAIN,
 )
 

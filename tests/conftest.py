@@ -5,8 +5,8 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from homeassistant.const import CONF_HOST, CONF_PORT
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.wanas.const import (
     CONF_HAS_COOLER,
@@ -17,8 +17,6 @@ from custom_components.wanas.const import (
     DEFAULT_PROTOCOL,
     DOMAIN,
 )
-
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 

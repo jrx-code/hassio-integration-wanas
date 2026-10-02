@@ -28,6 +28,17 @@ MAX_SCAN_INTERVAL = 600
 # coordinator update fail, so keep requests short.
 MAX_READ_BLOCK = 16
 
+# Hard deadline for one bus call (connect, read or write). pymodbus gives up on its own
+# after timeout x (retries + 1) = 12 s by default, so this only fires when a call never
+# returns at all. Without it, one such call holds the bus lock forever and every poll and
+# write after it queues up: the core modbus YAML hub stopped exactly like that, silently,
+# on the unit this was written against.
+BUS_TIMEOUT = 30
+
+# Failed polls in a row after which the socket is dropped and opened afresh, whatever
+# the failure was. Error responses alone keep the connection otherwise.
+MAX_FAILED_POLLS = 3
+
 # Weekly schedule ("Harmonogram tygodniowy", "Programy" on the panel): five periods per
 # day. Register 8 does not report the current weekday: it selects which day registers
 # 10-23 show and accept (0 = Sunday ... 6 = Saturday). Verified on a Combo 430 on

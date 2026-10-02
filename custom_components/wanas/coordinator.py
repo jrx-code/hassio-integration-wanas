@@ -16,6 +16,7 @@ from pymodbus.client import AsyncModbusTcpClient, AsyncModbusUdpClient
 from pymodbus.framer import FramerType
 
 from .const import (
+    ALWAYS_READ_ADDRESSES,
     CONF_PROTOCOL,
     CONF_REGISTERS,
     CONF_SCAN_INTERVAL,
@@ -28,6 +29,9 @@ from .const import (
     MAX_READ_BLOCK,
     PROTOCOL_TCP,
     PROTOCOL_UDP,
+    SCHEDULE_DAY_ADDRESS,
+    SCHEDULE_FIRST_ADDRESS,
+    SCHEDULE_REGISTER_COUNT,
     RegisterDataType,
     feature_addresses,
     get_default_registers,
@@ -113,6 +117,7 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
             v for k, v in self.registers.items()
             if k.endswith("_address") and isinstance(v, int)
         } - skip
+        keep |= ALWAYS_READ_ADDRESSES
         self._read_blocks = _build_read_blocks(sorted(keep))
 
     @property
@@ -199,19 +204,18 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
 
         return data
 
-    async def async_write_register(self, address: int, value: int) -> None:
-        """Write a value to a holding register."""
-        async with self._bus:
-            try:
-                client = await self._get_client()
-                result = await client.write_register(
-                    address=address, value=value, device_id=self.slave_id
-                )
-            except Exception as err:
-                self._drop_client()
-                raise HomeAssistantError(
-                    f"Wanas: writing register {address} failed: {err}"
-                ) from err
+    async def _write_locked(self, address: int, value: int) -> None:
+        """Write one holding register. The caller must hold the bus lock."""
+        try:
+            client = await self._get_client()
+            result = await client.write_register(
+                address=address, value=value, device_id=self.slave_id
+            )
+        except Exception as err:
+            self._drop_client()
+            raise HomeAssistantError(
+                f"Wanas: writing register {address} failed: {err}"
+            ) from err
 
         if result.isError():
             # The device refused the write - a read-only register or a value out of
@@ -221,10 +225,76 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
                 f"Wanas: device rejected the write of {value} to register {address}: {result}"
             )
 
+    async def _read_locked(self, address: int, count: int) -> list[int]:
+        """Read holding registers for a service call. The caller must hold the bus lock."""
+        try:
+            client = await self._get_client()
+            result = await client.read_holding_registers(
+                address=address, count=count, device_id=self.slave_id
+            )
+        except Exception as err:
+            self._drop_client()
+            raise HomeAssistantError(
+                f"Wanas: reading registers {address}-{address + count - 1} failed: {err}"
+            ) from err
+        if result.isError():
+            raise HomeAssistantError(
+                f"Wanas: device rejected the read of registers {address}-{address + count - 1}: {result}"
+            )
+        return list(result.registers)
+
+    async def async_write_register(self, address: int, value: int) -> None:
+        """Write a value to a holding register."""
+        async with self._bus:
+            await self._write_locked(address, value)
+
         # Show the new value at once instead of waiting out the refresh debounce,
         # then confirm it against the device on the next poll.
         if self.data is not None:
             self.async_set_updated_data({**self.data, address: value})
+        await self.async_request_refresh()
+
+    async def async_write_registers(self, values: dict[int, int]) -> None:
+        """Write several registers in order as one exchange nothing else can interleave with."""
+        async with self._bus:
+            for address, value in values.items():
+                await self._write_locked(address, value)
+
+        if self.data is not None:
+            self.async_set_updated_data({**self.data, **values})
+        await self.async_request_refresh()
+
+    async def async_read_week(self) -> dict[int, list[int]]:
+        """Read the weekly program for every day, then put the day selector back.
+
+        Registers 10-23 only show the day register 8 points at, so reading the week
+        means stepping 8 through 0-6. The bus lock is held throughout: a poll or a
+        write landing in between would see, or change, the wrong day.
+        """
+        week: dict[int, list[int]] = {}
+        async with self._bus:
+            (selected,) = await self._read_locked(SCHEDULE_DAY_ADDRESS, 1)
+            try:
+                for day in range(7):
+                    await self._write_locked(SCHEDULE_DAY_ADDRESS, day)
+                    week[day] = await self._read_locked(
+                        SCHEDULE_FIRST_ADDRESS, SCHEDULE_REGISTER_COUNT
+                    )
+            finally:
+                await self._write_locked(SCHEDULE_DAY_ADDRESS, selected)
+        return week
+
+    async def async_write_schedule(self, days: list[int], values: dict[int, int]) -> None:
+        """Write program registers (10-23) for the given days, restoring the selector."""
+        async with self._bus:
+            (selected,) = await self._read_locked(SCHEDULE_DAY_ADDRESS, 1)
+            try:
+                for day in days:
+                    await self._write_locked(SCHEDULE_DAY_ADDRESS, day)
+                    for address, value in values.items():
+                        await self._write_locked(address, value)
+            finally:
+                await self._write_locked(SCHEDULE_DAY_ADDRESS, selected)
         await self.async_request_refresh()
 
     async def async_close(self) -> None:

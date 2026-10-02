@@ -13,10 +13,10 @@ Monitor temperatures, airflow, fan speeds, filter status — and toggle bypass, 
 
 ## Features
 
-- **34 entities** built on the manufacturer register table: airflow, five temperatures, fan
-  speeds, filter countdown, the six status flags, the four digital inputs, and writable
+- **54 entities** built on the manufacturer register table: airflow, five temperatures, fan
+  speeds, filter countdown, the six status flags, the four digital inputs, writable
   controls for bypass, GWC, humidifier, heater, cooler, the timed functions and the fan
-  power setpoints
+  power setpoints, the weekly program and the controller clock
 - **Polish and English** entity and config-flow names, picked from the Home Assistant language
 - **Asks which optional modules the unit has** (heater, cooler, humidifier, maxiCONTROL room panels) and skips their
   entities entirely when they are not fitted; changeable afterwards without re-adding
@@ -26,8 +26,10 @@ Monitor temperatures, airflow, fan speeds, filter status — and toggle bypass, 
   stop answering long requests and one unanswered read takes down every entity
 - **One exchange at a time**: reads and writes share an `asyncio.Lock`, because RTU frames
   carry no transaction id and this gateway is transparent
-- **Weekly program** exposed as configuration entities: zone boundaries, zone fan speeds and
-  zone temperatures
+- **Weekly program, day by day**: a program day selector, configuration entities for zone
+  boundaries, fan speeds and temperatures of the selected day, and `wanas.get_schedule` /
+  `wanas.set_schedule` for the whole week in one call
+- **Controller clock** as a timestamp sensor, with a button that sets it from Home Assistant
 - **Diagnostics** with the whole register bank, the read plan and the entity map, host redacted
 - **Configurable polling interval** (5 to 600 s)
 - **Auto-reconnect** on a dropped connection, and writes rejected by the device surface as a
@@ -83,16 +85,23 @@ off removes its entities from the registry rather than leaving them unavailable.
 
 If your device uses non-standard register mapping:
 
-1. Enable **Advanced Mode** in your Home Assistant user profile
-2. Add the integration — after successful connection test, a second step appears
+1. Add the integration and tick **Show advanced configuration** on the first form
+2. After a successful connection test, a second step appears
 3. Modify any register address (all fields are pre-filled with defaults)
+
+The same form is available after setup: open **Configure** on the integration card and tick
+**Reconfigure register addresses and names**. It opens on the values currently in use. Only
+fields that differ from the defaults are stored, so an untouched field keeps following the
+built-in register map when a later release corrects it, and restoring every field to its
+default removes the overrides altogether.
 
 This is useful for custom firmware or alternative Wanas device variants.
 
 ## Entities
 
-34 entities: 11 sensors, 10 binary sensors, 5 switches and 8 numbers. Names are translated,
-so the Polish column is what a Polish instance displays.
+54 entities on a fully equipped unit without maxiCONTROL: 12 sensors, 10 binary sensors,
+8 switches, 22 numbers, 1 select and 1 button. Names are translated, so the Polish column is
+what a Polish instance displays.
 
 ### Sensors
 
@@ -109,6 +118,7 @@ so the Polish column is what a Polish instance displays.
 | 29 | Extra probe temperature | Temperatura dodatkowa |
 | 36 | Filter replacement | Wymiana filtra |
 | 37 | System errors | Błędy systemu |
+| 50, 51 | Controller clock | Zegar sterownika |
 | 55 | Room humidity (maxiCONTROL) | Wilgotność w pokoju |
 | 56 | Bathroom 1 humidity (maxiCONTROL) | Wilgotność w łazience 1 |
 | 57 | Bathroom 2 humidity (maxiCONTROL) | Wilgotność w łazience 2 |
@@ -145,22 +155,81 @@ Registers 46 to 49 are the controller's read-only digital inputs.
 | 40 → 32 | Humidifier | Nawilżacz |
 | 41 → 33 | Heater | Nagrzewnica |
 | 42 → 34 | Cooler | Chłodnica |
+| 43 → 35 | Vacation (30 days) | Urlop (30 dni) |
+| 44 → 44 | Fireplace (3 min) | Kominek (3 min) |
+| 45 → 45 | Party (12 h) | Impreza (12 h) |
+
+The last three are one-tap versions of the timed functions: on writes the longest duration
+the register takes, off writes 0, and the switch stays on while the counter runs down. The
+numbers below set any other duration.
 
 ### Numbers
 
 | Register | Range | Unit | English | Polish |
 |---|---|---|---|---|
-| 41 | 0 to 60 | dni | Heater days | Nagrzewnica (dni) |
-| 42 | 0 to 60 | dni | Cooler days | Chłodnica (dni) |
+| 41 | 0 to 180 | dni | Heater days | Nagrzewnica (dni) |
+| 42 | 0 to 180 | dni | Cooler days | Chłodnica (dni) |
 | 43 | 0 to 30 | dni | Vacation days | Tryb urlopowy (dni) |
 | 44 | 0 to 180 | s | Fireplace | Funkcja kominek |
 | 45 | 0 to 720 | min | Party | Funkcja impreza |
-| 52 | 1 to 100 | % | Fan power 1 | Moc biegu 1 |
-| 53 | 1 to 100 | % | Fan power 2 | Moc biegu 2 |
-| 54 | 1 to 100 | % | Fan power 3 | Moc biegu 3 |
+| 52 | 1 to 1600 | % or m³/h | Fan power/flow 1 | Moc/przepływ biegu 1 |
+| 53 | 1 to 1600 | % or m³/h | Fan power/flow 2 | Moc/przepływ biegu 2 |
+| 54 | 1 to 1600 | % or m³/h | Fan power/flow 3 | Moc/przepływ biegu 3 |
+
+Registers 52 to 54 hold fan power in percent, or the airflow in m³/h when the unit runs in
+constant-flow mode. The manufacturer table gives 1 to 100 %, but a Combo 430 in flow mode
+reads 100, 200 and 400 there, so the numbers accept up to 1600 and carry no unit.
 
 Registers 41 and 42 are day counters on the device. The switches write 1, arming them
-for a day; the matching Heater days / Cooler days numbers give the full 0 to 60 range.
+for a day; the matching Heater days / Cooler days numbers give the full 0 to 180 range
+(DTR Combo 430/630, 04.2026).
+
+The 14 weekly program numbers (zone 1-4 end, zone 1-5 fan speed, zone 1-5 temperature,
+registers 10 to 23) are described below.
+
+## Weekly program and controller clock
+
+The controller holds a separate program for each day of the week, but shows only one day at
+a time: register 8 selects the day, and registers 10 to 23 then read and write that day's
+zones. Register 8 is **not** the current weekday. This was checked on a Combo 430: with
+Saturday selected, zone 1 speed was changed from 2 to 1, Sunday and Friday still read 2,
+Saturday kept 1 after stepping through the other days, and was then put back.
+
+| Entity | Register | English | Polish |
+|---|---|---|---|
+| `select` | 8 | Program day | Dzień programu |
+| `button` | 50, 51 | Set clock from Home Assistant | Ustaw zegar z Home Assistant |
+
+The zone numbers always act on the day the **Program day** select shows. Pick the day first,
+then change the zones. Changing the select does not change what the unit runs today.
+
+For whole-week work there are two services. Both hold the bus for the whole exchange and put
+register 8 back where it was:
+
+```yaml
+# Read all seven days
+action: wanas.get_schedule
+response_variable: week
+
+# Write zones for several days; lists you leave out stay as they are
+action: wanas.set_schedule
+data:
+  days: [monday, tuesday, wednesday, thursday, friday]
+  zone_ends: ["06:00", "08:30", "16:00", "22:00"]   # quarter hours, increasing
+  zone_speeds: [1, 2, 1, 2, 1]                       # 0-3, zones 1-5
+  zone_temperatures: [19, 21, 20, 21, 18]            # 10-30 °C, zones 1-5
+```
+
+Zone 5 runs from the end of zone 4 to midnight, so there are four end times and five speeds
+and temperatures. Pass `config_entry_id` only when more than one unit is set up.
+
+The controller clock is local wall time: date `day<<11 | month<<7 | (year-2000)` in register
+50, time `hour<<8 | minute` in register 51. The time example in the DTR (`hour<<7`) does not
+match the unit. The clock drifts by a few minutes, and the weekly program runs on it.
+
+The DTR also lists registers 72 (manual fan speed), 73 (manual temperature setpoint) and 74
+(software version). The Combo 430 this was developed on answers all three with a Modbus
+error, so they are not exposed.
 
 ## Requirements
 
@@ -190,9 +259,9 @@ python3 -m venv .venv && .venv/bin/pip install pytest-homeassistant-custom-compo
 .venv/bin/python -m pytest
 ```
 
-20 tests covering the config and options flows, setup, the version 2 migration, module
-gating, read blocking, bus serialisation, error mapping and diagnostics. Coverage is 93 %
-overall and 94 % on `config_flow.py`.
+26 tests covering the config and options flows (including remapping registers after setup),
+setup, the version 2 migration, module gating, read blocking, bus serialisation, error
+mapping and diagnostics. Coverage is 93 % overall and 95 % on `config_flow.py`.
 
 ## Languages
 

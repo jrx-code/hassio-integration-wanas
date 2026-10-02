@@ -20,6 +20,7 @@ from pymodbus.framer import FramerType
 
 from .const import (
     BINARY_SENSOR_DESCRIPTIONS,
+    CONF_CONFIGURE_REGISTERS,
     CONF_PROTOCOL,
     CONF_REGISTERS,
     CONF_SCAN_INTERVAL,
@@ -69,8 +70,18 @@ def _options_schema(current: dict) -> vol.Schema:
                 CONF_SCAN_INTERVAL,
                 default=current.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
             ): vol.All(int, vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL)),
+            vol.Optional(CONF_CONFIGURE_REGISTERS, default=False): bool,
         }
     )
+
+
+def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Flatten the per-platform sections of the register form into one dict."""
+    flat: dict[str, Any] = {}
+    for value in user_input.values():
+        if isinstance(value, dict):
+            flat.update(value)
+    return flat
 
 
 def _create_client(
@@ -158,19 +169,24 @@ def _build_register_schema(defaults: dict[str, int | str]) -> vol.Schema:
 
 
 class WanasOptionsFlow(OptionsFlow):
-    """Let the fitted modules be corrected without removing the integration."""
+    """Let the fitted modules, polling and register map be corrected later."""
+
+    def __init__(self) -> None:
+        """Initialize the options flow."""
+        self._options: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show and store the module checkboxes."""
         if user_input is not None:
+            configure_registers = user_input.pop(CONF_CONFIGURE_REGISTERS, False)
             # async_create_entry replaces options wholesale, so merge - otherwise
-            # saving this form would drop the register overrides written by the
-            # advanced step of the config flow.
-            return self.async_create_entry(
-                data={**self.config_entry.options, **user_input}
-            )
+            # saving this form would drop the register overrides.
+            self._options = {**self.config_entry.options, **user_input}
+            if configure_registers:
+                return await self.async_step_registers()
+            return self.async_create_entry(data=self._options)
 
         entry = self.config_entry
         current: dict[str, Any] = {
@@ -181,6 +197,33 @@ class WanasOptionsFlow(OptionsFlow):
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
         return self.async_show_form(step_id="init", data_schema=_options_schema(current))
+
+    async def async_step_registers(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Re-edit register addresses and names after setup."""
+        defaults = get_default_register_config()
+
+        if user_input is not None:
+            # Keep only what differs from the defaults. A full copy would pin every
+            # address, so a later release correcting the register map would never
+            # reach a unit whose options form had been saved once.
+            changed = {
+                key: value
+                for key, value in _flatten_sections(user_input).items()
+                if defaults.get(key) != value
+            }
+            if changed:
+                self._options[CONF_REGISTERS] = changed
+            else:
+                self._options.pop(CONF_REGISTERS, None)
+            return self.async_create_entry(data=self._options)
+
+        current = {**defaults, **self.config_entry.options.get(CONF_REGISTERS, {})}
+        return self.async_show_form(
+            step_id="registers",
+            data_schema=_build_register_schema(current),
+        )
 
 
 class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -245,15 +288,10 @@ class WanasConfigFlow(ConfigFlow, domain=DOMAIN):
         defaults = get_default_register_config()
 
         if user_input is not None:
-            # Flatten nested section data into a single dict
-            flat: dict[str, Any] = {}
-            for value in user_input.values():
-                if isinstance(value, dict):
-                    flat.update(value)
             return self.async_create_entry(
                 title=f"Wanas ({self._connection_data[CONF_HOST]})",
                 data=self._connection_data,
-                options={CONF_REGISTERS: flat},
+                options={CONF_REGISTERS: _flatten_sections(user_input)},
             )
 
         return self.async_show_form(

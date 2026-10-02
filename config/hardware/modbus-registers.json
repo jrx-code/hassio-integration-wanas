@@ -99,14 +99,14 @@
     {
       "address": 8,
       "type": "R/W",
-      "name": "Dzień tygodnia",
+      "name": "Wybór dnia w harmonogramie",
       "description": "Program tygodniowy",
       "data_type": "dziesiętny",
       "min": 0,
       "max": 6,
       "default": 0,
       "unit": null,
-      "notes": "0 — niedziela, 1 - poniedziałek, 2 — wtorek, 3 — środa, 4 — czwartek, 5 — piątek, 6 — sobota"
+      "notes": "0 — niedziela, 1 - poniedziałek, 2 — wtorek, 3 — środa, 4 — czwartek, 5 — piątek, 6 — sobota. Wybiera dzień, dla którego czytane i zapisywane są rejestry 10-23 (DTR 04.2026), NIE bieżący dzień. Potwierdzone na Combo 430 02.10.2026."
     },
     {
       "address": 9,
@@ -499,10 +499,10 @@
       "description": "Aktywacja/ dezaktywacja. (Menu rozwinę)",
       "data_type": "dziesiętny",
       "min": 0,
-      "max": 60,
+      "max": 180,
       "default": 0,
       "unit": "dni",
-      "notes": "Aktywacja na maks. 60 dni."
+      "notes": "Aktywacja na maks. 180 dni (DTR Combo 430/630 04.2026; starsza tabela: 60)."
     },
     {
       "address": 42,
@@ -511,10 +511,10 @@
       "description": null,
       "data_type": "dziesiętny",
       "min": 0,
-      "max": 60,
+      "max": 180,
       "default": 0,
       "unit": "dni",
-      "notes": "Aktywacja na maks. 60 dni."
+      "notes": "Aktywacja na maks. 180 dni (DTR Combo 430/630 04.2026; starsza tabela: 60)."
     },
     {
       "address": 43,
@@ -610,7 +610,7 @@
       "max": null,
       "default": null,
       "unit": null,
-      "notes": "Tabela data"
+      "notes": "Tabela data: dzień<<11 | miesiąc<<7 | (rok-2000). Potwierdzone na Combo 430 (3354 = 01.10.2026)."
     },
     {
       "address": 51,
@@ -622,7 +622,7 @@
       "max": null,
       "default": null,
       "unit": null,
-      "notes": "Tabela godzina"
+      "notes": "Tabela godzina: godz<<8 | min. Przykład w DTR (godz<<7) jest błędny; potwierdzone na Combo 430 (5408 = 21:32)."
     },
     {
       "address": 52,

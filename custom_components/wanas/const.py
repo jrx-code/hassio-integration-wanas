@@ -208,6 +208,9 @@ class WanasNumberDescription:
     entity_category: EntityCategory | None = None
 
 
+# Day counts (filter replacement, heater, cooler and vacation days) carry no native unit:
+# UnitOfTime.DAYS renders as "d" in every language, so the unit comes from the entity
+# translations instead ("days", "dni"). None of them keeps long-term statistics.
 SENSOR_DESCRIPTIONS: tuple[WanasSensorDescription, ...] = (
     WanasSensorDescription(
         key="supply_airflow",
@@ -287,7 +290,6 @@ SENSOR_DESCRIPTIONS: tuple[WanasSensorDescription, ...] = (
         key="filter_replacement",
         name="Filter Replacement",
         address=36,
-        unit=UnitOfTime.DAYS,
     ),
     WanasSensorDescription(
         key="system_errors",
@@ -496,7 +498,6 @@ NUMBER_DESCRIPTIONS: tuple[WanasNumberDescription, ...] = (
         min_value=0,
         max_value=MAX_MODULE_DAYS,
         step=1,
-        unit=UnitOfTime.DAYS,
         feature=FEATURE_HEATER,
     ),
     WanasNumberDescription(
@@ -507,7 +508,6 @@ NUMBER_DESCRIPTIONS: tuple[WanasNumberDescription, ...] = (
         min_value=0,
         max_value=MAX_MODULE_DAYS,
         step=1,
-        unit=UnitOfTime.DAYS,
         feature=FEATURE_COOLER,
     ),
     WanasNumberDescription(
@@ -518,7 +518,6 @@ NUMBER_DESCRIPTIONS: tuple[WanasNumberDescription, ...] = (
         min_value=0,
         max_value=30,
         step=1,
-        unit=UnitOfTime.DAYS,
     ),
     WanasNumberDescription(
         key="fireplace",

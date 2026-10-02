@@ -14,7 +14,7 @@
  * restart the airflow animation each time.
  */
 
-const VERSION = "3.3.1";
+const VERSION = "3.4.0";
 const ROMAN = ["0", "I", "II", "III"];
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
@@ -41,6 +41,7 @@ const TEXT = {
     errBefore: (p, t, q, u) => `Przedział ${p} nie może kończyć się o ${t}: przedział ${q} kończy się o ${u}.`,
     errAfter: (p, t, q, u) => `Przedział ${p} nie może kończyć się o ${t}: przedział ${q} kończy się o ${u}.`,
     noDevice: "Nie znaleziono urządzenia Wanas.",
+    edDevice: "Urządzenie (puste = pierwsze znalezione)", edCompact: "Kompaktowy kafelek (jeden wiersz)",
   },
   en: {
     unit: "Ventilation", schedule: "Schedule", outside: "outside", house: "house",
@@ -64,6 +65,7 @@ const TEXT = {
     errBefore: (p, t, q, u) => `Period ${p} cannot end at ${t}: period ${q} ends at ${u}.`,
     errAfter: (p, t, q, u) => `Period ${p} cannot end at ${t}: period ${q} ends at ${u}.`,
     noDevice: "No Wanas device found.",
+    edDevice: "Device (empty = the first one found)", edCompact: "Compact tile (one row)",
   },
 };
 
@@ -136,6 +138,12 @@ const toMin = (t) => { const [h, m] = String(t).split(":"); return +h * 60 + +m;
 
 class WanasCard extends HTMLElement {
   static getStubConfig() { return {}; }
+
+  static getConfigElement() {
+    const el = document.createElement("wanas-card-editor");
+    el.compactOption = true;
+    return el;
+  }
 
   setConfig(config) {
     this._config = config || {};
@@ -413,6 +421,8 @@ class WanasCard extends HTMLElement {
 class WanasScheduleCard extends HTMLElement {
   static getStubConfig() { return {}; }
 
+  static getConfigElement() { return document.createElement("wanas-card-editor"); }
+
   setConfig(config) {
     this._config = config || {};
     this._week = null; this._saved = null; this._day = (new Date().getDay() + 6) % 7;
@@ -656,6 +666,45 @@ class WanasScheduleCard extends HTMLElement {
   }
 }
 
+/* ======================================================================== editor */
+
+/** Visual editor shared by both cards: the unit, and for wanas-card the compact tile. */
+class WanasCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...(config || {}) };
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._render();
+  }
+
+  _render() {
+    if (!this._hass || !this._config) return;
+    const t = lang(this._hass);
+    if (!this._form) {
+      this._form = document.createElement("ha-form");
+      this._form.computeLabel = (s) => (s.name === "device_id" ? t.edDevice : t.edCompact);
+      this._form.addEventListener("value-changed", (ev) => {
+        const config = { ...this._config, ...ev.detail.value };
+        for (const key of ["device_id", "compact"]) {
+          if (config[key] === undefined || config[key] === "" || config[key] === false) delete config[key];
+        }
+        this._config = config;
+        this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
+      });
+      this.append(this._form);
+    }
+    this._form.hass = this._hass;
+    this._form.data = this._config;
+    this._form.schema = [
+      { name: "device_id", selector: { device: { integration: "wanas" } } },
+      ...(this.compactOption ? [{ name: "compact", selector: { boolean: {} } }] : []),
+    ];
+  }
+}
+
 // Home Assistant's app bundle replaces window.customElements with a scoped-registry
 // polyfill, and this module (add_extra_js_url) loads in parallel with it. Defined before
 // the swap, the cards land in the native registry the polyfill does not consult, and
@@ -666,6 +715,7 @@ function defineCards() {
   const registry = window.customElements;
   if (!registry.get("wanas-card")) registry.define("wanas-card", WanasCard);
   if (!registry.get("wanas-schedule-card")) registry.define("wanas-schedule-card", WanasScheduleCard);
+  if (!registry.get("wanas-card-editor")) registry.define("wanas-card-editor", WanasCardEditor);
 }
 window.customElements.whenDefined("home-assistant").then(defineCards);
 

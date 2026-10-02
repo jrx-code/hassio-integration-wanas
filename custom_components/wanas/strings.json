@@ -203,7 +203,8 @@
         "name": "Extra probe temperature"
       },
       "filter_replacement": {
-        "name": "Filter replacement"
+        "name": "Filter replacement",
+        "unit_of_measurement": "days"
       },
       "system_errors": {
         "name": "System errors"
@@ -320,13 +321,16 @@
     },
     "number": {
       "heater_days": {
-        "name": "Heater days"
+        "name": "Heater days",
+        "unit_of_measurement": "days"
       },
       "cooler_days": {
-        "name": "Cooler days"
+        "name": "Cooler days",
+        "unit_of_measurement": "days"
       },
       "vacation": {
-        "name": "Vacation days"
+        "name": "Vacation days",
+        "unit_of_measurement": "days"
       },
       "fireplace": {
         "name": "Fireplace"

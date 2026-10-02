@@ -150,3 +150,22 @@ async def test_unload(hass: HomeAssistant, config_entry, mock_client) -> None:
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     mock_client.close.assert_called()
+
+
+async def test_day_counts_use_a_translated_unit(
+    hass: HomeAssistant, config_entry, mock_client
+) -> None:
+    """Filter, heater, cooler and vacation days say "days", not the bare "d"."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    for platform, key in (
+        ("sensor", "filter_replacement"),
+        ("number", "heater_days"),
+        ("number", "cooler_days"),
+        ("number", "vacation"),
+    ):
+        entity_id = registry.async_get_entity_id(platform, DOMAIN, f"192.0.2.10:5503:1_{key}")
+        assert hass.states.get(entity_id).attributes["unit_of_measurement"] == "days", key

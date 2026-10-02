@@ -237,6 +237,9 @@
       },
       "bathroom_2_humidity": {
         "name": "Wilgotność w łazience 2"
+      },
+      "controller_clock": {
+        "name": "Zegar sterownika"
       }
     },
     "binary_sensor": {
@@ -286,6 +289,15 @@
       },
       "cooler": {
         "name": "Chłodnica"
+      },
+      "vacation_switch": {
+        "name": "Urlop (30 dni)"
+      },
+      "fireplace_switch": {
+        "name": "Kominek (3 min)"
+      },
+      "party_switch": {
+        "name": "Impreza (12 h)"
       }
     },
     "number": {
@@ -347,13 +359,32 @@
         "name": "Temperatura strefy 5"
       },
       "fan_power_1": {
-        "name": "Moc biegu 1"
+        "name": "Moc/przepływ biegu 1"
       },
       "fan_power_2": {
-        "name": "Moc biegu 2"
+        "name": "Moc/przepływ biegu 2"
       },
       "fan_power_3": {
-        "name": "Moc biegu 3"
+        "name": "Moc/przepływ biegu 3"
+      }
+    },
+    "select": {
+      "program_day": {
+        "name": "Dzień programu",
+        "state": {
+          "sunday": "Niedziela",
+          "monday": "Poniedziałek",
+          "tuesday": "Wtorek",
+          "wednesday": "Środa",
+          "thursday": "Czwartek",
+          "friday": "Piątek",
+          "saturday": "Sobota"
+        }
+      }
+    },
+    "button": {
+      "sync_clock": {
+        "name": "Ustaw zegar z Home Assistant"
       }
     }
   },
@@ -367,7 +398,220 @@
           "has_cooler": "Rekuperator ma chłodnicę",
           "has_humidifier": "Rekuperator ma nawilżacz",
           "has_maxicontrol": "Rekuperator ma panele pokojowe maxiCONTROL",
-          "scan_interval": "Częstotliwość odpytywania (sekundy)"
+          "scan_interval": "Częstotliwość odpytywania (sekundy)",
+          "configure_registers": "Ponownie skonfiguruj adresy i nazwy rejestrów"
+        }
+      },
+      "registers": {
+        "title": "Konfiguracja rejestrów",
+        "description": "Zmień nazwy encji i adresy rejestrów Modbus. Zapisywane są tylko wartości inne niż domyślne, więc pole bez zmian dalej podąża za wbudowaną mapą rejestrów.",
+        "sections": {
+          "sensors": {
+            "name": "Sensory",
+            "data": {
+              "supply_airflow_name": "Wydatek nawiewu (nazwa)",
+              "supply_airflow_address": "Wydatek nawiewu (adres)",
+              "exhaust_airflow_name": "Wydatek wywiewu (nazwa)",
+              "exhaust_airflow_address": "Wydatek wywiewu (adres)",
+              "supply_fan_speed_name": "Bieg nawiewu (nazwa)",
+              "supply_fan_speed_address": "Bieg nawiewu (adres)",
+              "exhaust_fan_speed_name": "Bieg wywiewu (nazwa)",
+              "exhaust_fan_speed_address": "Bieg wywiewu (adres)",
+              "outdoor_temperature_name": "Temperatura zewnętrzna (nazwa)",
+              "outdoor_temperature_address": "Temperatura zewnętrzna (adres)",
+              "exhaust_temperature_name": "Temperatura wyrzutowa (nazwa)",
+              "exhaust_temperature_address": "Temperatura wyrzutowa (adres)",
+              "supply_temperature_name": "Temperatura nawiewu (nazwa)",
+              "supply_temperature_address": "Temperatura nawiewu (adres)",
+              "indoor_temperature_name": "Temperatura pomieszczenia (nazwa)",
+              "indoor_temperature_address": "Temperatura pomieszczenia (adres)",
+              "current_temperature_name": "Temperatura dodatkowa (nazwa)",
+              "current_temperature_address": "Temperatura dodatkowa (adres)",
+              "filter_replacement_name": "Wymiana filtra (nazwa)",
+              "filter_replacement_address": "Wymiana filtra (adres)",
+              "system_errors_name": "Błędy systemu (nazwa)",
+              "system_errors_address": "Błędy systemu (adres)",
+              "room_temperature_name": "Temperatura w pokoju (nazwa)",
+              "room_temperature_address": "Temperatura w pokoju (adres)",
+              "bathroom_1_temperature_name": "Temperatura w łazience 1 (nazwa)",
+              "bathroom_1_temperature_address": "Temperatura w łazience 1 (adres)",
+              "bathroom_2_temperature_name": "Temperatura w łazience 2 (nazwa)",
+              "bathroom_2_temperature_address": "Temperatura w łazience 2 (adres)",
+              "room_humidity_name": "Wilgotność w pokoju (nazwa)",
+              "room_humidity_address": "Wilgotność w pokoju (adres)",
+              "bathroom_1_humidity_name": "Wilgotność w łazience 1 (nazwa)",
+              "bathroom_1_humidity_address": "Wilgotność w łazience 1 (adres)",
+              "bathroom_2_humidity_name": "Wilgotność w łazience 2 (nazwa)",
+              "bathroom_2_humidity_address": "Wilgotność w łazience 2 (adres)"
+            }
+          },
+          "binary_sensors": {
+            "name": "Sensory binarne",
+            "data": {
+              "gwc_state_name": "Stan GWC (nazwa)",
+              "gwc_state_address": "Stan GWC (adres)",
+              "bypass_state_name": "Stan bypassu (nazwa)",
+              "bypass_state_address": "Stan bypassu (adres)",
+              "humidifier_state_name": "Stan nawilżacza (nazwa)",
+              "humidifier_state_address": "Stan nawilżacza (adres)",
+              "heater_state_name": "Stan nagrzewnicy (nazwa)",
+              "heater_state_address": "Stan nagrzewnicy (adres)",
+              "cooler_state_name": "Stan chłodnicy (nazwa)",
+              "cooler_state_address": "Stan chłodnicy (adres)",
+              "vacation_mode_name": "Tryb urlopowy (nazwa)",
+              "vacation_mode_address": "Tryb urlopowy (adres)",
+              "input_speed_1_name": "Wejście biegu 1 (nazwa)",
+              "input_speed_1_address": "Wejście biegu 1 (adres)",
+              "input_speed_3_name": "Wejście biegu 3 (nazwa)",
+              "input_speed_3_address": "Wejście biegu 3 (adres)",
+              "input_hood_name": "Wejście okapu (nazwa)",
+              "input_hood_address": "Wejście okapu (adres)",
+              "input_fire_alarm_name": "Wejście przeciwpożarowe (nazwa)",
+              "input_fire_alarm_address": "Wejście przeciwpożarowe (adres)"
+            }
+          },
+          "switches": {
+            "name": "Przełączniki",
+            "data": {
+              "gwc_name": "GWC (nazwa)",
+              "gwc_write_address": "GWC (adres zapisu)",
+              "gwc_verify_address": "GWC (adres weryfikacji)",
+              "bypass_name": "Bypass (nazwa)",
+              "bypass_write_address": "Bypass (adres zapisu)",
+              "bypass_verify_address": "Bypass (adres weryfikacji)",
+              "humidifier_name": "Nawilżacz (nazwa)",
+              "humidifier_write_address": "Nawilżacz (adres zapisu)",
+              "humidifier_verify_address": "Nawilżacz (adres weryfikacji)",
+              "heater_name": "Nagrzewnica (nazwa)",
+              "heater_write_address": "Nagrzewnica (adres zapisu)",
+              "heater_verify_address": "Nagrzewnica (adres weryfikacji)",
+              "cooler_name": "Chłodnica (nazwa)",
+              "cooler_write_address": "Chłodnica (adres zapisu)",
+              "cooler_verify_address": "Chłodnica (adres weryfikacji)"
+            }
+          },
+          "numbers": {
+            "name": "Wartości liczbowe",
+            "data": {
+              "heater_days_name": "Nagrzewnica (dni) (nazwa)",
+              "heater_days_write_address": "Nagrzewnica (dni) (adres zapisu)",
+              "heater_days_verify_address": "Nagrzewnica (dni) (adres weryfikacji)",
+              "cooler_days_name": "Chłodnica (dni) (nazwa)",
+              "cooler_days_write_address": "Chłodnica (dni) (adres zapisu)",
+              "cooler_days_verify_address": "Chłodnica (dni) (adres weryfikacji)",
+              "vacation_name": "Tryb urlopowy (dni) (nazwa)",
+              "vacation_write_address": "Tryb urlopowy (dni) (adres zapisu)",
+              "vacation_verify_address": "Tryb urlopowy (dni) (adres weryfikacji)",
+              "fireplace_name": "Funkcja kominek (nazwa)",
+              "fireplace_write_address": "Funkcja kominek (adres zapisu)",
+              "fireplace_verify_address": "Funkcja kominek (adres weryfikacji)",
+              "party_name": "Funkcja impreza (nazwa)",
+              "party_write_address": "Funkcja impreza (adres zapisu)",
+              "party_verify_address": "Funkcja impreza (adres weryfikacji)",
+              "zone_1_end_name": "Koniec strefy 1 (nazwa)",
+              "zone_1_end_write_address": "Koniec strefy 1 (adres zapisu)",
+              "zone_1_end_verify_address": "Koniec strefy 1 (adres weryfikacji)",
+              "zone_2_end_name": "Koniec strefy 2 (nazwa)",
+              "zone_2_end_write_address": "Koniec strefy 2 (adres zapisu)",
+              "zone_2_end_verify_address": "Koniec strefy 2 (adres weryfikacji)",
+              "zone_3_end_name": "Koniec strefy 3 (nazwa)",
+              "zone_3_end_write_address": "Koniec strefy 3 (adres zapisu)",
+              "zone_3_end_verify_address": "Koniec strefy 3 (adres weryfikacji)",
+              "zone_4_end_name": "Koniec strefy 4 (nazwa)",
+              "zone_4_end_write_address": "Koniec strefy 4 (adres zapisu)",
+              "zone_4_end_verify_address": "Koniec strefy 4 (adres weryfikacji)",
+              "zone_1_speed_name": "Bieg strefy 1 (nazwa)",
+              "zone_1_speed_write_address": "Bieg strefy 1 (adres zapisu)",
+              "zone_1_speed_verify_address": "Bieg strefy 1 (adres weryfikacji)",
+              "zone_2_speed_name": "Bieg strefy 2 (nazwa)",
+              "zone_2_speed_write_address": "Bieg strefy 2 (adres zapisu)",
+              "zone_2_speed_verify_address": "Bieg strefy 2 (adres weryfikacji)",
+              "zone_3_speed_name": "Bieg strefy 3 (nazwa)",
+              "zone_3_speed_write_address": "Bieg strefy 3 (adres zapisu)",
+              "zone_3_speed_verify_address": "Bieg strefy 3 (adres weryfikacji)",
+              "zone_4_speed_name": "Bieg strefy 4 (nazwa)",
+              "zone_4_speed_write_address": "Bieg strefy 4 (adres zapisu)",
+              "zone_4_speed_verify_address": "Bieg strefy 4 (adres weryfikacji)",
+              "zone_5_speed_name": "Bieg strefy 5 (nazwa)",
+              "zone_5_speed_write_address": "Bieg strefy 5 (adres zapisu)",
+              "zone_5_speed_verify_address": "Bieg strefy 5 (adres weryfikacji)",
+              "zone_1_temperature_name": "Temperatura strefy 1 (nazwa)",
+              "zone_1_temperature_write_address": "Temperatura strefy 1 (adres zapisu)",
+              "zone_1_temperature_verify_address": "Temperatura strefy 1 (adres weryfikacji)",
+              "zone_2_temperature_name": "Temperatura strefy 2 (nazwa)",
+              "zone_2_temperature_write_address": "Temperatura strefy 2 (adres zapisu)",
+              "zone_2_temperature_verify_address": "Temperatura strefy 2 (adres weryfikacji)",
+              "zone_3_temperature_name": "Temperatura strefy 3 (nazwa)",
+              "zone_3_temperature_write_address": "Temperatura strefy 3 (adres zapisu)",
+              "zone_3_temperature_verify_address": "Temperatura strefy 3 (adres weryfikacji)",
+              "zone_4_temperature_name": "Temperatura strefy 4 (nazwa)",
+              "zone_4_temperature_write_address": "Temperatura strefy 4 (adres zapisu)",
+              "zone_4_temperature_verify_address": "Temperatura strefy 4 (adres weryfikacji)",
+              "zone_5_temperature_name": "Temperatura strefy 5 (nazwa)",
+              "zone_5_temperature_write_address": "Temperatura strefy 5 (adres zapisu)",
+              "zone_5_temperature_verify_address": "Temperatura strefy 5 (adres weryfikacji)",
+              "fan_power_1_name": "Moc biegu 1 (nazwa)",
+              "fan_power_1_write_address": "Moc biegu 1 (adres zapisu)",
+              "fan_power_1_verify_address": "Moc biegu 1 (adres weryfikacji)",
+              "fan_power_2_name": "Moc biegu 2 (nazwa)",
+              "fan_power_2_write_address": "Moc biegu 2 (adres zapisu)",
+              "fan_power_2_verify_address": "Moc biegu 2 (adres weryfikacji)",
+              "fan_power_3_name": "Moc biegu 3 (nazwa)",
+              "fan_power_3_write_address": "Moc biegu 3 (adres zapisu)",
+              "fan_power_3_verify_address": "Moc biegu 3 (adres weryfikacji)"
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "day": {
+      "options": {
+        "sunday": "Niedziela",
+        "monday": "Poniedziałek",
+        "tuesday": "Wtorek",
+        "wednesday": "Środa",
+        "thursday": "Czwartek",
+        "friday": "Piątek",
+        "saturday": "Sobota"
+      }
+    }
+  },
+  "services": {
+    "get_schedule": {
+      "name": "Odczytaj program tygodniowy",
+      "description": "Czyta końce stref, biegi i temperatury dla wszystkich siedmiu dni. Wybór dnia programu jest potem przywracany.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Urządzenie",
+          "description": "Rekuperator Wanas, potrzebny tylko przy więcej niż jednym."
+        }
+      }
+    },
+    "set_schedule": {
+      "name": "Zapisz program tygodniowy",
+      "description": "Zapisuje strefy programu tygodniowego dla wybranych dni. Pominięte listy zostają bez zmian; wybór dnia programu jest potem przywracany.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Urządzenie",
+          "description": "Rekuperator Wanas, potrzebny tylko przy więcej niż jednym."
+        },
+        "days": {
+          "name": "Dni",
+          "description": "Dni do zapisania."
+        },
+        "zone_ends": {
+          "name": "Końce stref",
+          "description": "Cztery rosnące godziny końca stref 1-4, jako GG:MM albo minuty od północy, co kwadrans. Strefa 5 trwa do północy."
+        },
+        "zone_speeds": {
+          "name": "Biegi stref",
+          "description": "Pięć biegów (0-3) dla stref 1-5."
+        },
+        "zone_temperatures": {
+          "name": "Temperatury stref",
+          "description": "Pięć temperatur zadanych (10-30 °C) dla stref 1-5."
         }
       }
     }

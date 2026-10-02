@@ -1,0 +1,40 @@
+get_schedule:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: wanas
+
+set_schedule:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: wanas
+    days:
+      required: true
+      example: '["monday", "tuesday"]'
+      selector:
+        select:
+          multiple: true
+          translation_key: day
+          options:
+            - sunday
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+    zone_ends:
+      example: '["05:00", "08:00", "16:00", "22:00"]'
+      selector:
+        object:
+    zone_speeds:
+      example: "[1, 2, 1, 2, 1]"
+      selector:
+        object:
+    zone_temperatures:
+      example: "[20, 21, 20, 21, 19]"
+      selector:
+        object:

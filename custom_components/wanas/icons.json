@@ -11,7 +11,8 @@
       "indoor_temperature": { "default": "mdi:home-thermometer" },
       "current_temperature": { "default": "mdi:thermometer-lines" },
       "filter_replacement": { "default": "mdi:air-filter" },
-      "system_errors": { "default": "mdi:alert-circle-outline" }
+      "system_errors": { "default": "mdi:alert-circle-outline" },
+      "controller_clock": { "default": "mdi:clock-outline" }
     },
     "binary_sensor": {
       "gwc_state": { "default": "mdi:heat-wave" },
@@ -30,7 +31,10 @@
       "bypass": { "default": "mdi:pipe-disconnected" },
       "humidifier": { "default": "mdi:air-humidifier" },
       "heater": { "default": "mdi:radiator" },
-      "cooler": { "default": "mdi:snowflake" }
+      "cooler": { "default": "mdi:snowflake" },
+      "vacation_switch": { "default": "mdi:bag-suitcase" },
+      "fireplace_switch": { "default": "mdi:fireplace" },
+      "party_switch": { "default": "mdi:party-popper" }
     },
     "number": {
       "heater_days": { "default": "mdi:radiator" },
@@ -55,6 +59,16 @@
       "fan_power_1": { "default": "mdi:fan-speed-1" },
       "fan_power_2": { "default": "mdi:fan-speed-2" },
       "fan_power_3": { "default": "mdi:fan-speed-3" }
+    },
+    "select": {
+      "program_day": { "default": "mdi:calendar-week" }
+    },
+    "button": {
+      "sync_clock": { "default": "mdi:clock-check-outline" }
     }
+  },
+  "services": {
+    "get_schedule": { "service": "mdi:calendar-search" },
+    "set_schedule": { "service": "mdi:calendar-edit" }
   }
 }

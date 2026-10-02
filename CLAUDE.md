@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Home Assistant integration for a **Wanas heat recovery ventilator (HRV)** controlled via
 **Modbus RTU over TCP**. The repository holds two things: the `custom_components/wanas`
 Python integration, which is what ships via HACS, and a `config/` tree of the older YAML
-setup kept for reference. No build system, no tests, no linting.
+setup kept for reference. No build system; `pytest` suite in `tests/` and Ruff
+(`ruff.toml`), both run by `.github/workflows/validate.yml`.
 
 ## Architecture
 
@@ -15,9 +16,13 @@ setup kept for reference. No build system, no tests, no linting.
 custom_components/wanas/
 ├── const.py                      # register map: 17 sensors, 10 binary sensors,
 │                                 #   5 switches, 8 numbers, all keyed to registers
-├── coordinator.py                # pymodbus client, read blocks capped at 16 registers
+├── coordinator.py                # pymodbus client, read blocks capped at 16 registers,
+│                                 #   week read/write behind the day selector
 ├── config_flow.py                # connection step + optional register/name overrides
 ├── {sensor,binary_sensor,switch,number}.py
+├── select.py                     # program day (register 8)
+├── button.py, clock.py           # clock sync button, register 50/51 encoding
+├── services.py, services.yaml    # wanas.get_schedule / wanas.set_schedule
 ├── strings.json                  # English source for config flow and entity names
 └── translations/{en,pl}.json     # entity names are TRANSLATED, see the warning below
 
@@ -69,14 +74,26 @@ pymodbus client, so it needs no hardware and no mock server.
 ### Modbus Register Layout
 
 - **0–7**: Real-time data (airflow m³/h, fan speeds 0–3, temperatures with 0.1°C scale via int16)
-- **8–28**: Weekly schedule (day, zone boundaries in minutes, zone speeds, zone temps, comm params)
+- **8**: Program day selector, 0 = Sunday. **Not the current weekday**: it picks which day
+  registers 10–23 show and accept. Verified on a real unit (Saturday zone 1 speed 2→1 left
+  Sunday and Friday at 2, then restored). Zone number entities write to whatever day 8
+  points at; anything that steps through days must hold `coordinator._bus` for the whole
+  exchange and restore 8 (`async_read_week`, `async_write_schedule`)
+- **10–23**: Program of the selected day: 10–13 zone ends (minutes, quarter hours),
+  14–18 zone fan speeds, 19–23 zone setpoints
+- **24–28**: Communication parameters
 - **29–36**: Read-only status (extra temp, GWC, bypass/humidifier/heater/cooler/vacation states, filter days remaining, error bits)
-- **38–45**: Writable controls (GWC=38, bypass=39, humidifier=40, heater=41 in days,
-  cooler=42 in days, vacation=43 in days, fireplace=44 in seconds, party=45 in minutes)
+- **38–45**: Writable controls (GWC=38, bypass=39, humidifier=40, heater=41 in days 0–180,
+  cooler=42 in days 0–180, vacation=43 in days, fireplace=44 in seconds, party=45 in minutes)
 - **46–49**: Read-only digital inputs (speed 1, speed 3, hood, fire alarm)
-- **50–51**: Date and time. The manufacturer's encoding tables are NOT in `docs/`; the mock
-  assumes `(month << 8) | day` and `(hour << 8) | minute`, unverified against hardware
-- **52–54**: Fan power / flow setpoints per speed, 1 to 100 %
+- **50–51**: Controller clock, verified on a real unit: date `day<<11 | month<<7 |
+  (year-2000)` (as in the DTR), time `hour<<8 | minute` (the DTR example says `hour<<7`
+  and is wrong). Local wall time, no zone
+- **52–54**: Fan setpoints per speed: percent of power, or airflow in m³/h in constant-flow
+  mode. The table says 1 to 100 %, a real unit in flow mode holds 100/200/400, so the
+  numbers take 1 to 1600 with no unit
+- **72–74**: In the DTR (manual speed, manual setpoint, software version), but the unit
+  this was developed on answers reads of all three with a Modbus error. Not exposed
 
 Temperature registers use uint16 where 0=0°C, 65535=−0.1°C, and 63066=sensor error.
 

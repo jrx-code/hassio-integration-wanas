@@ -5,8 +5,10 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BINARY_SENSOR_DESCRIPTIONS,
@@ -17,13 +19,18 @@ from .const import (
 )
 from .coordinator import WanasCoordinator
 from .entity import device_key
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type WanasConfigEntry = ConfigEntry[WanasCoordinator]
 
@@ -52,6 +59,12 @@ def _purge_absent_modules(hass: HomeAssistant, entry: WanasConfigEntry) -> None:
     for reg_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
         if reg_entry.unique_id in absent:
             registry.async_remove(reg_entry.entity_id)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register the weekly program services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: WanasConfigEntry) -> bool:

@@ -12,7 +12,8 @@
       "current_temperature": { "default": "mdi:thermometer-lines" },
       "filter_replacement": { "default": "mdi:air-filter" },
       "system_errors": { "default": "mdi:alert-circle-outline" },
-      "controller_clock": { "default": "mdi:clock-outline" }
+      "controller_clock": { "default": "mdi:clock-outline" },
+      "schedule_summary": { "default": "mdi:calendar-clock" }
     },
     "binary_sensor": {
       "gwc_state": { "default": "mdi:heat-wave" },
@@ -42,10 +43,6 @@
       "vacation": { "default": "mdi:bag-suitcase" },
       "fireplace": { "default": "mdi:fireplace" },
       "party": { "default": "mdi:party-popper" },
-      "zone_1_end": { "default": "mdi:clock-end" },
-      "zone_2_end": { "default": "mdi:clock-end" },
-      "zone_3_end": { "default": "mdi:clock-end" },
-      "zone_4_end": { "default": "mdi:clock-end" },
       "zone_1_speed": { "default": "mdi:fan" },
       "zone_2_speed": { "default": "mdi:fan" },
       "zone_3_speed": { "default": "mdi:fan" },
@@ -65,6 +62,12 @@
     },
     "button": {
       "sync_clock": { "default": "mdi:clock-check-outline" }
+    },
+    "time": {
+      "period_1_until": { "default": "mdi:clock-end" },
+      "period_2_until": { "default": "mdi:clock-end" },
+      "period_3_until": { "default": "mdi:clock-end" },
+      "period_4_until": { "default": "mdi:clock-end" }
     }
   },
   "services": {

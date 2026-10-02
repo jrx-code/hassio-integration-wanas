@@ -13,10 +13,10 @@ Monitor temperatures, airflow, fan speeds, filter status — and toggle bypass, 
 
 ## Features
 
-- **54 entities** built on the manufacturer register table: airflow, five temperatures, fan
+- **55 entities** built on the manufacturer register table: airflow, five temperatures, fan
   speeds, filter countdown, the six status flags, the four digital inputs, writable
   controls for bypass, GWC, humidifier, heater, cooler, the timed functions and the fan
-  power setpoints, the weekly program and the controller clock
+  power setpoints, the weekly schedule and the controller clock
 - **Polish and English** entity and config-flow names, picked from the Home Assistant language
 - **Asks which optional modules the unit has** (heater, cooler, humidifier, maxiCONTROL room panels) and skips their
   entities entirely when they are not fitted; changeable afterwards without re-adding
@@ -26,8 +26,8 @@ Monitor temperatures, airflow, fan speeds, filter status — and toggle bypass, 
   stop answering long requests and one unanswered read takes down every entity
 - **One exchange at a time**: reads and writes share an `asyncio.Lock`, because RTU frames
   carry no transaction id and this gateway is transparent
-- **Weekly program, day by day**: a program day selector, configuration entities for zone
-  boundaries, fan speeds and temperatures of the selected day, and `wanas.get_schedule` /
+- **Weekly schedule, day by day, as on the panel**: five periods per day with a time of day
+  where each one ends, a fan speed and a temperature; `wanas.get_schedule` /
   `wanas.set_schedule` for the whole week in one call
 - **Controller clock** as a timestamp sensor, with a button that sets it from Home Assistant
 - **Diagnostics** with the whole register bank, the read plan and the entity map, host redacted
@@ -99,8 +99,8 @@ This is useful for custom firmware or alternative Wanas device variants.
 
 ## Entities
 
-54 entities on a fully equipped unit without maxiCONTROL: 12 sensors, 10 binary sensors,
-8 switches, 22 numbers, 1 select and 1 button. Names are translated, so the Polish column is
+55 entities on a fully equipped unit without maxiCONTROL: 13 sensors, 10 binary sensors,
+8 switches, 18 numbers, 4 times, 1 select and 1 button. Names are translated, so the Polish column is
 what a Polish instance displays.
 
 ### Sensors
@@ -184,48 +184,73 @@ Registers 41 and 42 are day counters on the device. The switches write 1, arming
 for a day; the matching Heater days / Cooler days numbers give the full 0 to 180 range
 (DTR Combo 430/630, 04.2026).
 
-The 14 weekly program numbers (zone 1-4 end, zone 1-5 fan speed, zone 1-5 temperature,
-registers 10 to 23) are described below.
+The weekly schedule entities (registers 8 and 10 to 23) are described below.
 
-## Weekly program and controller clock
+## Weekly schedule and controller clock
 
-The controller holds a separate program for each day of the week, but shows only one day at
-a time: register 8 selects the day, and registers 10 to 23 then read and write that day's
-zones. Register 8 is **not** the current weekday. This was checked on a Combo 430: with
-Saturday selected, zone 1 speed was changed from 2 to 1, Sunday and Friday still read 2,
-Saturday kept 1 after stepping through the other days, and was then put back.
+The unit's panel calls this **Programy** (the manual: *harmonogram tygodniowy*). Each day is a
+table of five periods: from, until, fan speed and temperature. Period 1 starts at 00:00 and
+period 5 ends at 00:00, so there are four times to set, each the end of one period and the
+start of the next.
+
+| From | Until | Speed | Temperature |
+|---|---|---|---|
+| 00:00 | Period 1 until | Period 1 fan speed | Period 1 temperature |
+| Period 1 until | Period 2 until | Period 2 fan speed | Period 2 temperature |
+| … | … | … | … |
+| Period 4 until | 00:00 | Period 5 fan speed | Period 5 temperature |
+
+The controller keeps a separate schedule for each day but shows one day at a time: register 8
+selects the day, and registers 10 to 23 read and write that day. Register 8 is **not** the
+current weekday. This was checked on a Combo 430: with Saturday selected, period 1 speed was
+changed from 2 to 1, Sunday and Friday still read 2, and Saturday kept 1 after stepping
+through the other days. The value was then put back.
 
 | Entity | Register | English | Polish |
 |---|---|---|---|
-| `select` | 8 | Program day | Dzień programu |
+| `select` | 8 | Schedule day | Harmonogram: dzień |
+| `time` | 10-13 | Period 1-4 until | Przedział 1-4: do godziny |
+| `number` | 14-18 | Period 1-5 fan speed | Przedział 1-5: bieg |
+| `number` | 19-23 | Period 1-5 temperature | Przedział 1-5: temperatura |
+| `sensor` | 8, 10-23 | Schedule (selected day) | Harmonogram (wybrany dzień) |
 | `button` | 50, 51 | Set clock from Home Assistant | Ustaw zegar z Home Assistant |
 
-The zone numbers always act on the day the **Program day** select shows. Pick the day first,
-then change the zones. Changing the select does not change what the unit runs today.
+- All period entities act on the day the **Schedule day** select shows. Pick the day first,
+  then change the periods. Changing the select does not change what the unit runs today.
+- **Until** times must be on the quarter hour, between 00:15 and 23:45, and later than the
+  previous period's end and earlier than the next one's. Anything else is rejected with an
+  error that says why. Nothing is rounded.
+- Each **fan speed** entity carries `from` and `until` attributes.
+- The **Schedule** sensor reads like the panel's table, for example
+  `00:00-06:00 I 18° | 06:00-07:00 II 20° | 07:00-14:00 I 20° | 14:00-15:00 III 20° | 15:00-00:00 I 18°`,
+  with the day and the five periods as attributes.
 
 For whole-week work there are two services. Both hold the bus for the whole exchange and put
 register 8 back where it was:
 
 ```yaml
-# Read all seven days
+# Read all seven days: {monday: {periods: [{from, until, speed, temperature}, ...]}, ...}
 action: wanas.get_schedule
 response_variable: week
 
-# Write zones for several days; lists you leave out stay as they are
+# Write whole days, one row per period, like the panel's table
 action: wanas.set_schedule
 data:
   days: [monday, tuesday, wednesday, thursday, friday]
-  zone_ends: ["06:00", "08:30", "16:00", "22:00"]   # quarter hours, increasing
-  zone_speeds: [1, 2, 1, 2, 1]                       # 0-3, zones 1-5
-  zone_temperatures: [19, 21, 20, 21, 18]            # 10-30 °C, zones 1-5
+  periods:
+    - {until: "06:00", speed: 1, temperature: 18}
+    - {until: "07:00", speed: 2, temperature: 20}
+    - {until: "14:00", speed: 1, temperature: 20}
+    - {until: "15:00", speed: 3, temperature: 20}
+    - {speed: 1, temperature: 18}        # period 5 runs to midnight
 ```
 
-Zone 5 runs from the end of zone 4 to midnight, so there are four end times and five speeds
-and temperatures. Pass `config_entry_id` only when more than one unit is set up.
+All five periods are required. Speeds are 0-3, temperatures 10-30 °C, and `until` follows
+the rules above. Pass `config_entry_id` only when more than one unit is set up.
 
 The controller clock is local wall time: date `day<<11 | month<<7 | (year-2000)` in register
 50, time `hour<<8 | minute` in register 51. The time example in the DTR (`hour<<7`) does not
-match the unit. The clock drifts by a few minutes, and the weekly program runs on it.
+match the unit. The clock drifts by a few minutes, and the weekly schedule runs on it.
 
 The DTR also lists registers 72 (manual fan speed), 73 (manual temperature setpoint) and 74
 (software version). The Combo 430 this was developed on answers all three with a Modbus
@@ -244,13 +269,13 @@ error, so they are not exposed.
 
 There is no register that sets the fan speed. Registers 2 and 3 report it, registers 46 and 47
 are read-only digital inputs, and the speed itself comes either from those contacts or from
-the weekly program. A `fan` entity could only fake it by rewriting the active zone's speed,
+the weekly schedule. A `fan` entity could only fake it by rewriting the active period's speed,
 which would silently edit the schedule instead of making a temporary change. The weekly
-program is exposed as configuration entities instead, and on this installation the contacts
+schedule is exposed as configuration entities instead, and on this installation the contacts
 are driven by a Zigbee relay outside the integration.
 
 The same applies to `climate`: the unit has no target-temperature register for the supply
-air, only per-zone setpoints in the weekly program.
+air, only per-period setpoints in the weekly schedule.
 
 ## Tests
 

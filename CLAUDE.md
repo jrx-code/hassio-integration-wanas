@@ -20,7 +20,8 @@ custom_components/wanas/
 │                                 #   week read/write behind the day selector
 ├── config_flow.py                # connection step + optional register/name overrides
 ├── {sensor,binary_sensor,switch,number}.py
-├── select.py                     # program day (register 8)
+├── select.py                     # schedule day (register 8)
+├── time.py, schedule.py          # period 1-4 until (registers 10-13), period maths
 ├── button.py, clock.py           # clock sync button, register 50/51 encoding
 ├── services.py, services.yaml    # wanas.get_schedule / wanas.set_schedule
 ├── strings.json                  # English source for config flow and entity names
@@ -74,13 +75,18 @@ pymodbus client, so it needs no hardware and no mock server.
 ### Modbus Register Layout
 
 - **0–7**: Real-time data (airflow m³/h, fan speeds 0–3, temperatures with 0.1°C scale via int16)
-- **8**: Program day selector, 0 = Sunday. **Not the current weekday**: it picks which day
-  registers 10–23 show and accept. Verified on a real unit (Saturday zone 1 speed 2→1 left
-  Sunday and Friday at 2, then restored). Zone number entities write to whatever day 8
-  points at; anything that steps through days must hold `coordinator._bus` for the whole
-  exchange and restore 8 (`async_read_week`, `async_write_schedule`)
-- **10–23**: Program of the selected day: 10–13 zone ends (minutes, quarter hours),
-  14–18 zone fan speeds, 19–23 zone setpoints
+- **8**: Schedule day selector, 0 = Sunday. **Not the current weekday**: it picks which day
+  registers 10–23 show and accept. Verified on a real unit (Saturday period 1 speed 2→1 left
+  Sunday and Friday at 2, then restored). Period entities write to whatever day 8 points at;
+  anything that steps through days must hold `coordinator._bus` for the whole exchange and
+  restore 8 (`async_read_week`, `async_write_schedule`)
+- **10–23**: Schedule of the selected day as five **periods** (the panel's "Programy" table):
+  10–13 where periods 1–4 end (minutes, quarter hours, exposed as `time` entities that
+  reject off-grid and out-of-order values), 14–18 period fan speeds, 19–23 period setpoints.
+  The register table says "strefa" (zone), but the manual uses "strefa" for day/night zone
+  control (58–70), so code and names say "period". The speed/temperature number keys are
+  still `zone_N_speed` / `zone_N_temperature`: renaming them would change unique ids and
+  drop history. `RETIRED_ENTITIES` lists the 3.1 `zone_N_end` numbers purged on setup
 - **24–28**: Communication parameters
 - **29–36**: Read-only status (extra temp, GWC, bypass/humidifier/heater/cooler/vacation states, filter days remaining, error bits)
 - **38–45**: Writable controls (GWC=38, bypass=39, humidifier=40, heater=41 in days 0–180,

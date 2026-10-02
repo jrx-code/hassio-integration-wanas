@@ -122,48 +122,36 @@
               "party_name": "Party (name)",
               "party_write_address": "Party (write address)",
               "party_verify_address": "Party (verify address)",
-              "zone_1_end_name": "Zone 1 end (name)",
-              "zone_1_end_write_address": "Zone 1 end (write address)",
-              "zone_1_end_verify_address": "Zone 1 end (verify address)",
-              "zone_2_end_name": "Zone 2 end (name)",
-              "zone_2_end_write_address": "Zone 2 end (write address)",
-              "zone_2_end_verify_address": "Zone 2 end (verify address)",
-              "zone_3_end_name": "Zone 3 end (name)",
-              "zone_3_end_write_address": "Zone 3 end (write address)",
-              "zone_3_end_verify_address": "Zone 3 end (verify address)",
-              "zone_4_end_name": "Zone 4 end (name)",
-              "zone_4_end_write_address": "Zone 4 end (write address)",
-              "zone_4_end_verify_address": "Zone 4 end (verify address)",
-              "zone_1_speed_name": "Zone 1 fan speed (name)",
-              "zone_1_speed_write_address": "Zone 1 fan speed (write address)",
-              "zone_1_speed_verify_address": "Zone 1 fan speed (verify address)",
-              "zone_2_speed_name": "Zone 2 fan speed (name)",
-              "zone_2_speed_write_address": "Zone 2 fan speed (write address)",
-              "zone_2_speed_verify_address": "Zone 2 fan speed (verify address)",
-              "zone_3_speed_name": "Zone 3 fan speed (name)",
-              "zone_3_speed_write_address": "Zone 3 fan speed (write address)",
-              "zone_3_speed_verify_address": "Zone 3 fan speed (verify address)",
-              "zone_4_speed_name": "Zone 4 fan speed (name)",
-              "zone_4_speed_write_address": "Zone 4 fan speed (write address)",
-              "zone_4_speed_verify_address": "Zone 4 fan speed (verify address)",
-              "zone_5_speed_name": "Zone 5 fan speed (name)",
-              "zone_5_speed_write_address": "Zone 5 fan speed (write address)",
-              "zone_5_speed_verify_address": "Zone 5 fan speed (verify address)",
-              "zone_1_temperature_name": "Zone 1 temperature (name)",
-              "zone_1_temperature_write_address": "Zone 1 temperature (write address)",
-              "zone_1_temperature_verify_address": "Zone 1 temperature (verify address)",
-              "zone_2_temperature_name": "Zone 2 temperature (name)",
-              "zone_2_temperature_write_address": "Zone 2 temperature (write address)",
-              "zone_2_temperature_verify_address": "Zone 2 temperature (verify address)",
-              "zone_3_temperature_name": "Zone 3 temperature (name)",
-              "zone_3_temperature_write_address": "Zone 3 temperature (write address)",
-              "zone_3_temperature_verify_address": "Zone 3 temperature (verify address)",
-              "zone_4_temperature_name": "Zone 4 temperature (name)",
-              "zone_4_temperature_write_address": "Zone 4 temperature (write address)",
-              "zone_4_temperature_verify_address": "Zone 4 temperature (verify address)",
-              "zone_5_temperature_name": "Zone 5 temperature (name)",
-              "zone_5_temperature_write_address": "Zone 5 temperature (write address)",
-              "zone_5_temperature_verify_address": "Zone 5 temperature (verify address)",
+              "zone_1_speed_name": "Period 1 fan speed (name)",
+              "zone_1_speed_write_address": "Period 1 fan speed (write address)",
+              "zone_1_speed_verify_address": "Period 1 fan speed (verify address)",
+              "zone_2_speed_name": "Period 2 fan speed (name)",
+              "zone_2_speed_write_address": "Period 2 fan speed (write address)",
+              "zone_2_speed_verify_address": "Period 2 fan speed (verify address)",
+              "zone_3_speed_name": "Period 3 fan speed (name)",
+              "zone_3_speed_write_address": "Period 3 fan speed (write address)",
+              "zone_3_speed_verify_address": "Period 3 fan speed (verify address)",
+              "zone_4_speed_name": "Period 4 fan speed (name)",
+              "zone_4_speed_write_address": "Period 4 fan speed (write address)",
+              "zone_4_speed_verify_address": "Period 4 fan speed (verify address)",
+              "zone_5_speed_name": "Period 5 fan speed (name)",
+              "zone_5_speed_write_address": "Period 5 fan speed (write address)",
+              "zone_5_speed_verify_address": "Period 5 fan speed (verify address)",
+              "zone_1_temperature_name": "Period 1 temperature (name)",
+              "zone_1_temperature_write_address": "Period 1 temperature (write address)",
+              "zone_1_temperature_verify_address": "Period 1 temperature (verify address)",
+              "zone_2_temperature_name": "Period 2 temperature (name)",
+              "zone_2_temperature_write_address": "Period 2 temperature (write address)",
+              "zone_2_temperature_verify_address": "Period 2 temperature (verify address)",
+              "zone_3_temperature_name": "Period 3 temperature (name)",
+              "zone_3_temperature_write_address": "Period 3 temperature (write address)",
+              "zone_3_temperature_verify_address": "Period 3 temperature (verify address)",
+              "zone_4_temperature_name": "Period 4 temperature (name)",
+              "zone_4_temperature_write_address": "Period 4 temperature (write address)",
+              "zone_4_temperature_verify_address": "Period 4 temperature (verify address)",
+              "zone_5_temperature_name": "Period 5 temperature (name)",
+              "zone_5_temperature_write_address": "Period 5 temperature (write address)",
+              "zone_5_temperature_verify_address": "Period 5 temperature (verify address)",
               "fan_power_1_name": "Fan power 1 (name)",
               "fan_power_1_write_address": "Fan power 1 (write address)",
               "fan_power_1_verify_address": "Fan power 1 (verify address)",
@@ -240,6 +228,9 @@
       },
       "controller_clock": {
         "name": "Controller clock"
+      },
+      "schedule_summary": {
+        "name": "Schedule (selected day)"
       }
     },
     "binary_sensor": {
@@ -316,47 +307,35 @@
       "party": {
         "name": "Party"
       },
-      "zone_1_end": {
-        "name": "Zone 1 end"
-      },
-      "zone_2_end": {
-        "name": "Zone 2 end"
-      },
-      "zone_3_end": {
-        "name": "Zone 3 end"
-      },
-      "zone_4_end": {
-        "name": "Zone 4 end"
-      },
       "zone_1_speed": {
-        "name": "Zone 1 fan speed"
+        "name": "Period 1 fan speed"
       },
       "zone_2_speed": {
-        "name": "Zone 2 fan speed"
+        "name": "Period 2 fan speed"
       },
       "zone_3_speed": {
-        "name": "Zone 3 fan speed"
+        "name": "Period 3 fan speed"
       },
       "zone_4_speed": {
-        "name": "Zone 4 fan speed"
+        "name": "Period 4 fan speed"
       },
       "zone_5_speed": {
-        "name": "Zone 5 fan speed"
+        "name": "Period 5 fan speed"
       },
       "zone_1_temperature": {
-        "name": "Zone 1 temperature"
+        "name": "Period 1 temperature"
       },
       "zone_2_temperature": {
-        "name": "Zone 2 temperature"
+        "name": "Period 2 temperature"
       },
       "zone_3_temperature": {
-        "name": "Zone 3 temperature"
+        "name": "Period 3 temperature"
       },
       "zone_4_temperature": {
-        "name": "Zone 4 temperature"
+        "name": "Period 4 temperature"
       },
       "zone_5_temperature": {
-        "name": "Zone 5 temperature"
+        "name": "Period 5 temperature"
       },
       "fan_power_1": {
         "name": "Fan power/flow 1"
@@ -370,7 +349,7 @@
     },
     "select": {
       "program_day": {
-        "name": "Program day",
+        "name": "Schedule day",
         "state": {
           "sunday": "Sunday",
           "monday": "Monday",
@@ -385,6 +364,20 @@
     "button": {
       "sync_clock": {
         "name": "Set clock from Home Assistant"
+      }
+    },
+    "time": {
+      "period_1_until": {
+        "name": "Period 1 until"
+      },
+      "period_2_until": {
+        "name": "Period 2 until"
+      },
+      "period_3_until": {
+        "name": "Period 3 until"
+      },
+      "period_4_until": {
+        "name": "Period 4 until"
       }
     }
   },
@@ -508,48 +501,36 @@
               "party_name": "Party (name)",
               "party_write_address": "Party (write address)",
               "party_verify_address": "Party (verify address)",
-              "zone_1_end_name": "Zone 1 end (name)",
-              "zone_1_end_write_address": "Zone 1 end (write address)",
-              "zone_1_end_verify_address": "Zone 1 end (verify address)",
-              "zone_2_end_name": "Zone 2 end (name)",
-              "zone_2_end_write_address": "Zone 2 end (write address)",
-              "zone_2_end_verify_address": "Zone 2 end (verify address)",
-              "zone_3_end_name": "Zone 3 end (name)",
-              "zone_3_end_write_address": "Zone 3 end (write address)",
-              "zone_3_end_verify_address": "Zone 3 end (verify address)",
-              "zone_4_end_name": "Zone 4 end (name)",
-              "zone_4_end_write_address": "Zone 4 end (write address)",
-              "zone_4_end_verify_address": "Zone 4 end (verify address)",
-              "zone_1_speed_name": "Zone 1 fan speed (name)",
-              "zone_1_speed_write_address": "Zone 1 fan speed (write address)",
-              "zone_1_speed_verify_address": "Zone 1 fan speed (verify address)",
-              "zone_2_speed_name": "Zone 2 fan speed (name)",
-              "zone_2_speed_write_address": "Zone 2 fan speed (write address)",
-              "zone_2_speed_verify_address": "Zone 2 fan speed (verify address)",
-              "zone_3_speed_name": "Zone 3 fan speed (name)",
-              "zone_3_speed_write_address": "Zone 3 fan speed (write address)",
-              "zone_3_speed_verify_address": "Zone 3 fan speed (verify address)",
-              "zone_4_speed_name": "Zone 4 fan speed (name)",
-              "zone_4_speed_write_address": "Zone 4 fan speed (write address)",
-              "zone_4_speed_verify_address": "Zone 4 fan speed (verify address)",
-              "zone_5_speed_name": "Zone 5 fan speed (name)",
-              "zone_5_speed_write_address": "Zone 5 fan speed (write address)",
-              "zone_5_speed_verify_address": "Zone 5 fan speed (verify address)",
-              "zone_1_temperature_name": "Zone 1 temperature (name)",
-              "zone_1_temperature_write_address": "Zone 1 temperature (write address)",
-              "zone_1_temperature_verify_address": "Zone 1 temperature (verify address)",
-              "zone_2_temperature_name": "Zone 2 temperature (name)",
-              "zone_2_temperature_write_address": "Zone 2 temperature (write address)",
-              "zone_2_temperature_verify_address": "Zone 2 temperature (verify address)",
-              "zone_3_temperature_name": "Zone 3 temperature (name)",
-              "zone_3_temperature_write_address": "Zone 3 temperature (write address)",
-              "zone_3_temperature_verify_address": "Zone 3 temperature (verify address)",
-              "zone_4_temperature_name": "Zone 4 temperature (name)",
-              "zone_4_temperature_write_address": "Zone 4 temperature (write address)",
-              "zone_4_temperature_verify_address": "Zone 4 temperature (verify address)",
-              "zone_5_temperature_name": "Zone 5 temperature (name)",
-              "zone_5_temperature_write_address": "Zone 5 temperature (write address)",
-              "zone_5_temperature_verify_address": "Zone 5 temperature (verify address)",
+              "zone_1_speed_name": "Period 1 fan speed (name)",
+              "zone_1_speed_write_address": "Period 1 fan speed (write address)",
+              "zone_1_speed_verify_address": "Period 1 fan speed (verify address)",
+              "zone_2_speed_name": "Period 2 fan speed (name)",
+              "zone_2_speed_write_address": "Period 2 fan speed (write address)",
+              "zone_2_speed_verify_address": "Period 2 fan speed (verify address)",
+              "zone_3_speed_name": "Period 3 fan speed (name)",
+              "zone_3_speed_write_address": "Period 3 fan speed (write address)",
+              "zone_3_speed_verify_address": "Period 3 fan speed (verify address)",
+              "zone_4_speed_name": "Period 4 fan speed (name)",
+              "zone_4_speed_write_address": "Period 4 fan speed (write address)",
+              "zone_4_speed_verify_address": "Period 4 fan speed (verify address)",
+              "zone_5_speed_name": "Period 5 fan speed (name)",
+              "zone_5_speed_write_address": "Period 5 fan speed (write address)",
+              "zone_5_speed_verify_address": "Period 5 fan speed (verify address)",
+              "zone_1_temperature_name": "Period 1 temperature (name)",
+              "zone_1_temperature_write_address": "Period 1 temperature (write address)",
+              "zone_1_temperature_verify_address": "Period 1 temperature (verify address)",
+              "zone_2_temperature_name": "Period 2 temperature (name)",
+              "zone_2_temperature_write_address": "Period 2 temperature (write address)",
+              "zone_2_temperature_verify_address": "Period 2 temperature (verify address)",
+              "zone_3_temperature_name": "Period 3 temperature (name)",
+              "zone_3_temperature_write_address": "Period 3 temperature (write address)",
+              "zone_3_temperature_verify_address": "Period 3 temperature (verify address)",
+              "zone_4_temperature_name": "Period 4 temperature (name)",
+              "zone_4_temperature_write_address": "Period 4 temperature (write address)",
+              "zone_4_temperature_verify_address": "Period 4 temperature (verify address)",
+              "zone_5_temperature_name": "Period 5 temperature (name)",
+              "zone_5_temperature_write_address": "Period 5 temperature (write address)",
+              "zone_5_temperature_verify_address": "Period 5 temperature (verify address)",
               "fan_power_1_name": "Fan power 1 (name)",
               "fan_power_1_write_address": "Fan power 1 (write address)",
               "fan_power_1_verify_address": "Fan power 1 (verify address)",
@@ -580,8 +561,8 @@
   },
   "services": {
     "get_schedule": {
-      "name": "Get weekly program",
-      "description": "Reads zone ends, fan speeds and temperatures for all seven days. The program day selector is put back afterwards.",
+      "name": "Get weekly schedule",
+      "description": "Reads the five periods (from, until, fan speed, temperature) of all seven days. The schedule day selector is put back afterwards.",
       "fields": {
         "config_entry_id": {
           "name": "Unit",
@@ -590,8 +571,8 @@
       }
     },
     "set_schedule": {
-      "name": "Set weekly program",
-      "description": "Writes zones of the weekly program for the chosen days. Lists you leave out stay as they are; the program day selector is put back afterwards.",
+      "name": "Set weekly schedule",
+      "description": "Writes all five periods of the chosen days, like one day's table on the unit's panel. The schedule day selector is put back afterwards.",
       "fields": {
         "config_entry_id": {
           "name": "Unit",
@@ -601,17 +582,9 @@
           "name": "Days",
           "description": "Days to write."
         },
-        "zone_ends": {
-          "name": "Zone ends",
-          "description": "Four increasing end times of zones 1-4, as HH:MM or minutes after midnight, in quarter hours. Zone 5 runs to midnight."
-        },
-        "zone_speeds": {
-          "name": "Zone fan speeds",
-          "description": "Five fan speeds (0-3) for zones 1-5."
-        },
-        "zone_temperatures": {
-          "name": "Zone temperatures",
-          "description": "Five setpoints (10-30 °C) for zones 1-5."
+        "periods": {
+          "name": "Periods",
+          "description": "Five periods in order, each with speed (0-3) and temperature (10-30 °C). Periods 1-4 also take until (HH:MM, on the quarter hour, increasing); period 5 runs to midnight and has no until."
         }
       }
     }

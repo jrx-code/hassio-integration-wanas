@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,6 +13,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import NUMBER_DESCRIPTIONS, WanasNumberDescription
 from .coordinator import WanasCoordinator
 from .entity import device_info, device_key
+from .schedule import bounds, format_minutes
+
+# The fan speed of schedule period N carries that period's from/until, so a dashboard
+# can draw the panel's table without template maths.
+PERIOD_SPEED_KEYS = {f"zone_{period}_speed": period for period in range(1, 6)}
 
 # Writes share one RS485 bus, so let Home Assistant serialise service calls.
 PARALLEL_UPDATES = 1
@@ -83,6 +90,16 @@ class WanasNumber(CoordinatorEntity[WanasCoordinator], NumberEntity):
         if value is None:
             return None
         return float(value)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """From and until of the schedule period, for the period speed entities."""
+        period = PERIOD_SPEED_KEYS.get(self._description.key)
+        if period is None or not self.coordinator.data:
+            return None
+        if (span := bounds(self.coordinator.data, period)) is None:
+            return None
+        return {"from": format_minutes(span[0]), "until": format_minutes(span[1])}
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the number value."""

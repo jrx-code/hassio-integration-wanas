@@ -28,16 +28,20 @@ MAX_SCAN_INTERVAL = 600
 # coordinator update fail, so keep requests short.
 MAX_READ_BLOCK = 16
 
-# Weekly program. Register 8 does not report the current weekday: it selects which
-# day registers 10-23 show and accept (0 = Sunday ... 6 = Saturday). Verified on a
-# Combo 430 on 2026-10-02: writing a zone on Saturday left Sunday and Friday as they
-# were. 10-13 are zone ends in minutes, 14-18 zone fan speeds, 19-23 zone setpoints.
+# Weekly schedule ("Harmonogram tygodniowy", "Programy" on the panel): five periods per
+# day. Register 8 does not report the current weekday: it selects which day registers
+# 10-23 show and accept (0 = Sunday ... 6 = Saturday). Verified on a Combo 430 on
+# 2026-10-02: writing period 1 on Saturday left Sunday and Friday as they were.
+# 10-13 are where periods 1-4 end (minutes after midnight, each also the start of the
+# next period), 14-18 the period fan speeds, 19-23 the period setpoints. The manual's
+# register table says "strefa" (zone), but the manual uses that word for the building's
+# day/night zone control (registers 58-70), so this code says "period".
 SCHEDULE_DAY_ADDRESS = 8
 SCHEDULE_FIRST_ADDRESS = 10
 SCHEDULE_REGISTER_COUNT = 14
-SCHEDULE_ZONE_END_ADDRESSES = (10, 11, 12, 13)
-SCHEDULE_ZONE_SPEED_ADDRESSES = (14, 15, 16, 17, 18)
-SCHEDULE_ZONE_TEMPERATURE_ADDRESSES = (19, 20, 21, 22, 23)
+SCHEDULE_PERIOD_UNTIL_ADDRESSES = (10, 11, 12, 13)
+SCHEDULE_PERIOD_SPEED_ADDRESSES = (14, 15, 16, 17, 18)
+SCHEDULE_PERIOD_TEMPERATURE_ADDRESSES = (19, 20, 21, 22, 23)
 SCHEDULE_DAYS = (
     "sunday",
     "monday",
@@ -53,10 +57,25 @@ SCHEDULE_DAYS = (
 CLOCK_DATE_ADDRESS = 50
 CLOCK_TIME_ADDRESS = 51
 
-# Read on every poll whatever the register options say: the program day selector
-# and the clock have fixed addresses and are not remappable.
+# Read on every poll whatever the register options say: the schedule day selector,
+# the period boundaries (time entities) and the clock have fixed addresses and are
+# not remappable.
 ALWAYS_READ_ADDRESSES: frozenset[int] = frozenset(
-    {SCHEDULE_DAY_ADDRESS, CLOCK_DATE_ADDRESS, CLOCK_TIME_ADDRESS}
+    {
+        SCHEDULE_DAY_ADDRESS,
+        *SCHEDULE_PERIOD_UNTIL_ADDRESSES,
+        CLOCK_DATE_ADDRESS,
+        CLOCK_TIME_ADDRESS,
+    }
+)
+
+# Entities of earlier releases that no longer exist, by platform and description key.
+# Zone 1-4 end were minute numbers; the period boundaries are time entities now.
+RETIRED_ENTITIES: tuple[tuple[str, str], ...] = (
+    ("number", "zone_1_end"),
+    ("number", "zone_2_end"),
+    ("number", "zone_3_end"),
+    ("number", "zone_4_end"),
 )
 
 # Day counters on registers 41 and 42 run to 180 days (DTR Combo 430/630, 04.2026).
@@ -513,50 +532,6 @@ NUMBER_DESCRIPTIONS: tuple[WanasNumberDescription, ...] = (
     # Registers 52-54 are the actual fan power setpoints. Registers 46-47, which an
     # earlier revision used here, are read-only digital inputs and are exposed as
     # binary sensors instead.
-    WanasNumberDescription(
-        key="zone_1_end",
-        name="Zone 1 End",
-        write_address=10,
-        verify_address=10,
-        min_value=15,
-        max_value=1380,
-        step=15,
-        unit=UnitOfTime.MINUTES,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    WanasNumberDescription(
-        key="zone_2_end",
-        name="Zone 2 End",
-        write_address=11,
-        verify_address=11,
-        min_value=30,
-        max_value=1395,
-        step=15,
-        unit=UnitOfTime.MINUTES,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    WanasNumberDescription(
-        key="zone_3_end",
-        name="Zone 3 End",
-        write_address=12,
-        verify_address=12,
-        min_value=45,
-        max_value=1410,
-        step=15,
-        unit=UnitOfTime.MINUTES,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    WanasNumberDescription(
-        key="zone_4_end",
-        name="Zone 4 End",
-        write_address=13,
-        verify_address=13,
-        min_value=60,
-        max_value=1425,
-        step=15,
-        unit=UnitOfTime.MINUTES,
-        entity_category=EntityCategory.CONFIG,
-    ),
     WanasNumberDescription(
         key="zone_1_speed",
         name="Zone 1 Fan Speed",

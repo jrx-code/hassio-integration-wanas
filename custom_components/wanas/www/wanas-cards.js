@@ -14,7 +14,7 @@
  * restart the airflow animation each time.
  */
 
-const VERSION = "3.5.0";
+const VERSION = "3.5.1";
 const ROMAN = ["0", "I", "II", "III"];
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
@@ -74,6 +74,7 @@ const TIMED = [
 ];
 const MODULES = ["bypass", "gwc", "heater", "cooler", "humidifier"];
 const READOUTS = ["speed", "airflow", "recovery", "filter"];
+const ANIMATION_FPS = 10;
 
 // Every option the editors offer, with its default. Only values that differ are saved.
 const CARD_DEFAULTS = {
@@ -121,9 +122,23 @@ function lang(hass) {
   return l.startsWith("pl") ? TEXT.pl : TEXT.en;
 }
 
+// Home Assistant hands every card a new hass on each state change in the house, but the
+// entity registry object only changes when the registry does. Scanning 6000+ entries cost
+// about 1 ms per update on a real install, so the map is kept per registry object.
+const _entityMaps = new WeakMap();
+
 /** Map "domain:translation_key" -> entity_id for one Wanas device. */
 function wanasEntities(hass, deviceId) {
-  const all = Object.values(hass.entities || {}).filter((e) => e.platform === "wanas");
+  const registry = hass.entities || {};
+  let byDevice = _entityMaps.get(registry);
+  if (!byDevice) { byDevice = new Map(); _entityMaps.set(registry, byDevice); }
+  const key = deviceId || "";
+  if (!byDevice.has(key)) byDevice.set(key, scanEntities(registry, deviceId));
+  return byDevice.get(key);
+}
+
+function scanEntities(registry, deviceId) {
+  const all = Object.values(registry).filter((e) => e.platform === "wanas");
   const device = deviceId || all.find((e) => e.device_id)?.device_id;
   const map = {};
   for (const e of all) {
@@ -166,6 +181,49 @@ class WanasCard extends HTMLElement {
   }
 
   getCardSize() { return this._config?.compact ? 1 : 6; }
+
+  // Animations run only while the card is on screen and the tab is visible.
+  connectedCallback() {
+    this._visible = true;
+    this._io = new IntersectionObserver((entries) => {
+      this._visible = entries.some((e) => e.isIntersecting); this._playState();
+    });
+    this._io.observe(this);
+    this._onVis = () => this._playState();
+    document.addEventListener("visibilitychange", this._onVis);
+  }
+
+  disconnectedCallback() {
+    clearInterval(this._timer); this._timer = null;
+    this._io?.disconnect(); this._io = null;
+    document.removeEventListener("visibilitychange", this._onVis);
+  }
+
+  // SVG dash offsets and rotations are not composited: a CSS animation repaints the whole
+  // diagram 60 times a second for as long as the card exists (measured: 0.73 s of browser
+  // work per 10 s, against 0.10 s with it stopped). A timer at ANIMATION_FPS moves the same
+  // elements, and nothing at all runs while the card is off screen or the tab is hidden.
+  _playState() {
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const run = !still && this._visible !== false && !document.hidden && this._dur > 0 && this.shadowRoot?.getElementById("dS");
+    if (run && !this._timer) {
+      this._timer = setInterval(() => this._frame(), 1000 / ANIMATION_FPS);
+    } else if (!run && this._timer) {
+      clearInterval(this._timer); this._timer = null;
+    }
+  }
+
+  _frame() {
+    const root = this.shadowRoot, dur = this._dur;
+    if (!root || !dur) return;
+    const t = performance.now() / 1000;
+    const offset = -28 * ((t / dur) % 1);
+    root.getElementById("dS")?.setAttribute("stroke-dashoffset", offset.toFixed(1));
+    root.getElementById("dE")?.setAttribute("stroke-dashoffset", offset.toFixed(1));
+    const angle = (360 * ((t / (dur * 0.6)) % 1)).toFixed(0);
+    root.getElementById("f1")?.setAttribute("transform", `rotate(${angle})`);
+    root.getElementById("f2")?.setAttribute("transform", `rotate(${angle})`);
+  }
 
   // Height follows the content: modules and timed functions vary per unit.
   getGridOptions() { return { columns: 12, rows: "auto", min_columns: 6 }; }
@@ -226,11 +284,9 @@ class WanasCard extends HTMLElement {
       svg .t { font-size: 17px; font-weight: 500; cursor: pointer; }
       .duct { fill: none; stroke-width: 7; stroke-linecap: round; }
       .dash { fill: none; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 12; stroke: rgba(255,255,255,0.85);
-        animation: run linear infinite; }
-      @keyframes run { to { stroke-dashoffset: -28; } }
+        animation: none; }
       .core { fill: var(--wc-track); stroke: var(--wc-soft); stroke-width: 1.2; }
-      .fan { transform-box: fill-box; transform-origin: center; animation: spin linear infinite; }
-      @keyframes spin { to { transform: rotate(360deg); } }
+      .fan { transform-box: fill-box; transform-origin: center; animation: none; }
       .ro { display: grid; grid-template-columns: repeat(var(--ro-cols, 4), minmax(0, 1fr)); gap: 10px; }
       .r { display: grid; gap: 2px; padding: 9px 11px; border-radius: 12px; background: var(--wc-track); cursor: pointer; min-width: 0; }
       .r .k { font-size: 12px; color: var(--wc-soft); }
@@ -248,7 +304,6 @@ class WanasCard extends HTMLElement {
       @container (max-width: 520px) { .ro { grid-template-columns: repeat(2, minmax(0, 1fr)); } .r .v { font-size: 19px; } }
       @container (max-width: 200px) { .ro { grid-template-columns: minmax(0, 1fr); } }
       .head:empty { display: none; }
-      .static .dash, .static .fan { animation: none !important; }
     </style>
     <ha-card class="${o("animate") ? "" : "static"}">
       <div class="head">${title}${o("show_clock") ? '<span class="sub" id="clock"></span>' : ""}</div>
@@ -287,6 +342,7 @@ class WanasCard extends HTMLElement {
     }
     this._built = true;
     this._sig = "";
+    this._playState();
   }
 
   // Today's recovered energy from recorder statistics, at most every five minutes.
@@ -375,8 +431,9 @@ class WanasCard extends HTMLElement {
     this._fetchToday();
     let dur = [0, 3.2, 1.8, 0.9][gear] || 0;
     if (!o("animate")) dur = 0;
-    for (const id of ["dS", "dE"]) { $(id).style.animationDuration = dur ? `${dur}s` : "0s"; $(id).style.opacity = gear ? 1 : 0; }
-    for (const id of ["f1", "f2"]) $(id).style.animationDuration = gear ? `${dur * 0.6}s` : "0s";
+    for (const id of ["dS", "dE"]) $(id).style.opacity = gear ? 1 : 0;
+    this._dur = dur;
+    this._playState();
     $("pB").setAttribute("opacity", bypass ? 0.9 : 0);
     $("pS").style.opacity = bypass ? 0.45 : 1;
 

@@ -13,8 +13,8 @@ ship with the integration.
 
 <table>
   <tr>
-    <td width="50%"><img src="images/card.png" alt="Wanas card: airflow diagram, readouts, modules"></td>
-    <td width="50%"><img src="images/schedule.png" alt="Wanas schedule card: one day as a timeline and a table of five periods"></td>
+    <td width="50%" valign="top"><img src="images/card.png" alt="Wanas card: airflow diagram, readouts, modules"></td>
+    <td width="50%" valign="top"><img src="images/schedule.png" alt="Wanas schedule card: one day as a timeline and a table of five periods"></td>
   </tr>
   <tr>
     <td colspan="2"><img src="images/compact.png" alt="Compact one-row tile" width="50%"></td>

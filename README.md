@@ -304,8 +304,8 @@ type: custom:wanas-schedule-card   # five periods per day, as on the unit's pane
 - **wanas-schedule-card** shows one day as a 24-hour timeline (bar height is the fan
   speed, the number above is the temperature) and a table of the five periods. Edits follow
   the same rules as the `time` entities; one save can write several days.
-- Both have a visual editor: pick the unit (empty means the first one found) and, for
-  `wanas-card`, the compact tile.
+- Both have a full visual editor (English and Polish), so nothing needs typing: pick them
+  under **Add card → By card → "Wanas"**. Only options changed from their defaults are saved.
 - Both find their entities through the entity registry, so renamed entity ids keep
   working. With more than one unit, add `device_id: <id>` (or pick it in the editor).
 - Colours come from the theme (`--primary-color`, `--warning-color`, `--divider-color`...).
@@ -316,6 +316,35 @@ at 03:17, updated by every poll for the selected day and by every schedule write
 read writes the day selector seven times, which is why it is not done on every poll.
 The **Current schedule period** sensor (state 1-5, attributes `from`, `until`, `speed`,
 `temperature`, `day`) comes from the same copy.
+
+### Card options
+
+`wanas-card`
+
+| Option | Default | |
+|---|---|---|
+| `device_id` | first unit | which Wanas device |
+| `title` / `hide_title` | "Rekuperator" / `false` | header text, or no header |
+| `compact` | `false` | one-row tile instead of the full card |
+| `show_diagram`, `show_readouts`, `show_modules`, `show_timed`, `show_now`, `show_clock` | `true` | sections: airflow diagram, readout tiles, module chips, timed functions, current schedule period, clock drift line |
+| `readouts` | all | any of `speed`, `airflow`, `recovery`, `filter` |
+| `modules` | all fitted | any of `bypass`, `gwc`, `heater`, `cooler`, `humidifier` |
+| `timed` | all | any of `fireplace_switch`, `party_switch`, `vacation_switch` |
+| `filter_warning_days` | `7` | filter tile turns amber at or below this |
+| `animate` | `true` | moving airflow and fans |
+
+`wanas-schedule-card`
+
+| Option | Default | |
+|---|---|---|
+| `device_id` | first unit | which Wanas device |
+| `title` / `hide_title` | "Harmonogram" / `false` | header text, or no header |
+| `read_only` | `false` | values only: no steppers, no save |
+| `show_timeline`, `show_table`, `show_week`, `show_reload` | `true` | day timeline, period table, week overview, "read from unit" button |
+| `start_day` | `today` | or `monday` ... `sunday` |
+
+Both cards follow their own width, not the screen's: readouts drop to two columns and the
+schedule table hides the "from" column (always the previous row's "until") when narrow.
 
 A static prototype of both cards is in `docs/cards-prototype.html`.
 

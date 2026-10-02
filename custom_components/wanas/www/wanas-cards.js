@@ -14,7 +14,7 @@
  * restart the airflow animation each time.
  */
 
-const VERSION = "3.4.0";
+const VERSION = "3.5.0";
 const ROMAN = ["0", "I", "II", "III"];
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
@@ -41,7 +41,6 @@ const TEXT = {
     errBefore: (p, t, q, u) => `Przedział ${p} nie może kończyć się o ${t}: przedział ${q} kończy się o ${u}.`,
     errAfter: (p, t, q, u) => `Przedział ${p} nie może kończyć się o ${t}: przedział ${q} kończy się o ${u}.`,
     noDevice: "Nie znaleziono urządzenia Wanas.",
-    edDevice: "Urządzenie (puste = pierwsze znalezione)", edCompact: "Kompaktowy kafelek (jeden wiersz)",
   },
   en: {
     unit: "Ventilation", schedule: "Schedule", outside: "outside", house: "house",
@@ -65,7 +64,6 @@ const TEXT = {
     errBefore: (p, t, q, u) => `Period ${p} cannot end at ${t}: period ${q} ends at ${u}.`,
     errAfter: (p, t, q, u) => `Period ${p} cannot end at ${t}: period ${q} ends at ${u}.`,
     noDevice: "No Wanas device found.",
-    edDevice: "Device (empty = the first one found)", edCompact: "Compact tile (one row)",
   },
 };
 
@@ -75,6 +73,22 @@ const TIMED = [
   ["vacation_switch", "vacation", "d", 30],
 ];
 const MODULES = ["bypass", "gwc", "heater", "cooler", "humidifier"];
+const READOUTS = ["speed", "airflow", "recovery", "filter"];
+
+// Every option the editors offer, with its default. Only values that differ are saved.
+const CARD_DEFAULTS = {
+  title: "", hide_title: false, compact: false,
+  show_diagram: true, show_readouts: true, show_modules: true, show_timed: true, show_now: true, show_clock: true,
+  readouts: READOUTS, modules: MODULES, timed: TIMED.map((x) => x[0]),
+  filter_warning_days: 7, animate: true,
+};
+const SCHEDULE_DEFAULTS = {
+  title: "", hide_title: false, read_only: false,
+  show_timeline: true, show_table: true, show_week: true, show_reload: true, start_day: "today",
+};
+const opt = (config, defaults, key) => (config && config[key] !== undefined ? config[key] : defaults[key]);
+// Stand-in for elements a configuration left out, so updates need no null checks.
+const NOWHERE = () => document.createElement("span");
 
 const SHARED_CSS = `
   :host { --wc-mono: var(--code-font-family, ui-monospace, "Roboto Mono", monospace);
@@ -141,7 +155,7 @@ class WanasCard extends HTMLElement {
 
   static getConfigElement() {
     const el = document.createElement("wanas-card-editor");
-    el.compactOption = true;
+    el.kind = "card";
     return el;
   }
 
@@ -188,13 +202,24 @@ class WanasCard extends HTMLElement {
         .r.warn b { color: var(--wc-warn); }
       </style>
       <ha-card><div class="tile" id="tile"><div class="g" id="g">–</div>
-        <div style="min-width:0; display:grid; gap:2px"><span class="l1">${t.unit}</span><span class="l2" id="l2"></span></div>
+        <div style="min-width:0; display:grid; gap:2px"><span class="l1">${this._config.title || t.unit}</span><span class="l2" id="l2"></span></div>
         <div class="r" id="r"><b id="rf">–</b>${t.filter.toLowerCase()}</div></div></ha-card>`;
       root.getElementById("tile").onclick = () => this._moreInfo(this._id("sensor", "supply_airflow"));
       this._built = true;
       return;
     }
+    const c = this._config, o = (k) => opt(c, CARD_DEFAULTS, k);
+    const shown = new Set(o("readouts"));
+    const tiles = {
+      speed: `<div class="r" data-k="supply_fan_speed"><span class="k">${t.gear}</span><span class="v" id="gear"></span><span class="n" id="gearN"></span></div>`,
+      airflow: `<div class="r" data-k="supply_airflow"><span class="k">${t.flow}</span><span class="v" id="flow"></span><span class="n" id="flowN"></span></div>`,
+      recovery: `<div class="r" data-k="heat_recovery_power" id="rbox"><span class="k">${t.recoveryTile}</span><span class="v" id="rec"></span><span class="n" id="recN"></span></div>`,
+      filter: `<div class="r" data-k="filter_replacement" id="fbox"><span class="k">${t.filter}</span><span class="v" id="filt"></span><span class="n" id="filtN"></span></div>`,
+    };
+    const readouts = READOUTS.filter((k) => shown.has(k)).map((k) => tiles[k]).join("");
+    const title = o("hide_title") ? "" : `<h2>${c.title || t.unit}</h2>`;
     root.innerHTML = `<style>${SHARED_CSS}
+      ha-card { container-type: inline-size; }
       svg { width: 100%; height: auto; display: block; margin: 6px 0 2px; }
       svg text { font-family: var(--wc-mono); fill: var(--primary-text-color); }
       svg .lbl { font-family: inherit; font-variant: small-caps; letter-spacing: 0.06em; fill: var(--wc-soft); font-size: 12px; }
@@ -206,7 +231,7 @@ class WanasCard extends HTMLElement {
       .core { fill: var(--wc-track); stroke: var(--wc-soft); stroke-width: 1.2; }
       .fan { transform-box: fill-box; transform-origin: center; animation: spin linear infinite; }
       @keyframes spin { to { transform: rotate(360deg); } }
-      .ro { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+      .ro { display: grid; grid-template-columns: repeat(var(--ro-cols, 4), minmax(0, 1fr)); gap: 10px; }
       .r { display: grid; gap: 2px; padding: 9px 11px; border-radius: 12px; background: var(--wc-track); cursor: pointer; min-width: 0; }
       .r .k { font-size: 12px; color: var(--wc-soft); }
       .r .v { font-family: var(--wc-mono); font-size: 21px; font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -220,11 +245,14 @@ class WanasCard extends HTMLElement {
         border: 1px solid color-mix(in srgb, var(--wc-accent) 45%, transparent); border-radius: 6px; padding: 1px 6px; }
       .now { margin-top: 14px; padding-top: 11px; border-top: 1px solid var(--wc-line); font-size: 13px; }
       .now b { font-family: var(--wc-mono); font-weight: 500; }
-      @media (max-width: 420px) { .ro { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      @container (max-width: 520px) { .ro { grid-template-columns: repeat(2, minmax(0, 1fr)); } .r .v { font-size: 19px; } }
+      @container (max-width: 200px) { .ro { grid-template-columns: minmax(0, 1fr); } }
+      .head:empty { display: none; }
+      .static .dash, .static .fan { animation: none !important; }
     </style>
-    <ha-card>
-      <div class="head"><h2>${t.unit}</h2><span class="sub" id="clock"></span></div>
-      <svg viewBox="0 0 640 250" role="img" aria-label="${t.unit}">
+    <ha-card class="${o("animate") ? "" : "static"}">
+      <div class="head">${title}${o("show_clock") ? '<span class="sub" id="clock"></span>' : ""}</div>
+      ${o("show_diagram") ? `<svg viewBox="0 0 640 250" role="img" aria-label="${t.unit}">
         <defs>
           <linearGradient id="gS" x1="0" x2="1"><stop id="gS0" offset="0"/><stop id="gS1" offset="1"/></linearGradient>
           <linearGradient id="gE" x1="1" x2="0"><stop id="gE0" offset="0"/><stop id="gE1" offset="1"/></linearGradient>
@@ -247,17 +275,12 @@ class WanasCard extends HTMLElement {
         <text class="lbl" x="30" y="196">${t.exhaust}</text><text class="t" id="tX" x="30" y="214" data-k="exhaust_temperature"></text>
         <text class="lbl" x="600" y="196" text-anchor="end">${t.supply}</text><text class="t" id="tS" x="600" y="152" text-anchor="end" data-k="supply_temperature"></text>
         <text class="lbl" x="600" y="62" text-anchor="end">${t.extract}</text><text class="t" id="tI" x="600" y="44" text-anchor="end" data-k="indoor_temperature"></text>
-      </svg>
-      <div class="ro">
-        <div class="r" data-k="supply_fan_speed"><span class="k">${t.gear}</span><span class="v" id="gear"></span><span class="n" id="gearN"></span></div>
-        <div class="r" data-k="supply_airflow"><span class="k">${t.flow}</span><span class="v" id="flow"></span><span class="n" id="flowN"></span></div>
-        <div class="r" data-k="heat_recovery_power" id="rbox"><span class="k">${t.recoveryTile}</span><span class="v" id="rec"></span><span class="n" id="recN"></span></div>
-        <div class="r" data-k="filter_replacement" id="fbox"><span class="k">${t.filter}</span><span class="v" id="filt"></span><span class="n" id="filtN"></span></div>
-      </div>
+      </svg>` : ""}
+      ${o("show_readouts") && readouts ? `<div class="ro" style="--ro-cols:${Math.max(1, Math.min(4, shown.size))}">${readouts}</div>` : ""}
       <div class="ov" id="ov" hidden><span class="tag" id="ovTag"></span><span id="ovText"></span></div>
-      <div class="label">${t.modules}</div><div class="chips" id="mods"></div>
-      <div class="label">${t.timed}</div><div class="chips" id="timed"></div>
-      <div class="now" id="now" hidden></div>
+      ${o("show_modules") ? `<div id="modsBox"><div class="label">${t.modules}</div><div class="chips" id="mods"></div></div>` : ""}
+      ${o("show_timed") ? `<div id="timedBox"><div class="label">${t.timed}</div><div class="chips" id="timed"></div></div>` : ""}
+      ${o("show_now") ? '<div class="now" id="now" hidden></div>' : ""}
     </ha-card>`;
     for (const el of root.querySelectorAll("[data-k]")) {
       el.addEventListener("click", () => this._moreInfo(this._id("sensor", el.dataset.k)));
@@ -302,7 +325,8 @@ class WanasCard extends HTMLElement {
     const sig = this._signature();
     if (sig === this._sig) return;
     this._sig = sig;
-    const h = this._hass, t = this._t, root = this.shadowRoot, $ = (id) => root.getElementById(id);
+    const h = this._hass, t = this._t, root = this.shadowRoot, $ = (id) => root.getElementById(id) || NOWHERE();
+    const o = (k) => opt(this._config, CARD_DEFAULTS, k);
     const s = (k) => num(h, this._id("sensor", k));
     const on = (domain, k) => h.states[this._id(domain, k)]?.state === "on";
     const out = s("outdoor_temperature"), exh = s("exhaust_temperature"), sup = s("supply_temperature"), ind = s("indoor_temperature");
@@ -321,7 +345,7 @@ class WanasCard extends HTMLElement {
     const cur = h.states[this._id("sensor", "current_period")];
     const progSpeed = cur?.attributes?.speed;
     const input3 = on("binary_sensor", "input_speed_3"), input1 = on("binary_sensor", "input_speed_1");
-    const filterWarn = filter != null && filter <= 7;
+    const filterWarn = filter != null && filter <= o("filter_warning_days");
 
     if (this._config.compact) {
       $("g").textContent = ROMAN[gear] ?? gear;
@@ -347,9 +371,10 @@ class WanasCard extends HTMLElement {
     $("rec").innerHTML = recW == null ? "—" : `${fmtKw(recW)}<small>kW</small>`;
     $("recN").textContent = recW == null ? (recId ? t.notRecovering : "")
       : (this._today != null ? t.today(this._today.toFixed(1).replace(".", ",")) : gain != null ? `${cooling ? "−" : "+"}${String(gain).replace(".", ",")} K` : "");
-    $("rbox").hidden = !recId;
+    if (!recId) $("rbox").hidden = true;
     this._fetchToday();
-    const dur = [0, 3.2, 1.8, 0.9][gear] || 0;
+    let dur = [0, 3.2, 1.8, 0.9][gear] || 0;
+    if (!o("animate")) dur = 0;
     for (const id of ["dS", "dE"]) { $(id).style.animationDuration = dur ? `${dur}s` : "0s"; $(id).style.opacity = gear ? 1 : 0; }
     for (const id of ["f1", "f2"]) $(id).style.animationDuration = gear ? `${dur * 0.6}s` : "0s";
     $("pB").setAttribute("opacity", bypass ? 0.9 : 0);
@@ -369,17 +394,20 @@ class WanasCard extends HTMLElement {
 
     // modules: only the ones this unit has (absent modules have no entity)
     const mods = $("mods"); mods.textContent = "";
+    const wantMods = new Set(o("modules"));
     for (const k of MODULES) {
-      const id = this._id("switch", k); if (!id) continue;
+      const id = this._id("switch", k); if (!id || !wantMods.has(k)) continue;
       const b = document.createElement("button");
       b.className = "chip" + (h.states[id]?.state === "on" ? " on" : "");
       b.innerHTML = `<span class="dot"></span>${t.names[k]}`;
       b.onclick = () => h.callService("switch", "toggle", { entity_id: id });
       mods.append(b);
     }
+    $("modsBox").hidden = !mods.childElementCount;
     const timed = $("timed"); timed.textContent = "";
+    const wantTimed = new Set(o("timed"));
     for (const [k, counter, unit, max] of TIMED) {
-      const id = this._id("switch", k); if (!id) continue;
+      const id = this._id("switch", k); if (!id || !wantTimed.has(k)) continue;
       const active = h.states[id]?.state === "on";
       const left = num(h, this._id("number", counter));
       const shown = active && left != null ? (unit === "s" ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : `${left} ${unit === "d" ? t.days : unit}`)
@@ -391,6 +419,7 @@ class WanasCard extends HTMLElement {
       timed.append(b);
     }
 
+    $("timedBox").hidden = !timed.childElementCount;
     const nowEl = $("now");
     if (cur && cur.state && !["unknown", "unavailable"].includes(cur.state)) {
       const a = cur.attributes;
@@ -421,11 +450,17 @@ class WanasCard extends HTMLElement {
 class WanasScheduleCard extends HTMLElement {
   static getStubConfig() { return {}; }
 
-  static getConfigElement() { return document.createElement("wanas-card-editor"); }
+  static getConfigElement() {
+    const el = document.createElement("wanas-card-editor");
+    el.kind = "schedule";
+    return el;
+  }
 
   setConfig(config) {
     this._config = config || {};
-    this._week = null; this._saved = null; this._day = (new Date().getDay() + 6) % 7;
+    const start = opt(this._config, SCHEDULE_DEFAULTS, "start_day");
+    const fixed = DAY_KEYS.indexOf(start);
+    this._week = null; this._saved = null; this._day = fixed >= 0 ? fixed : (new Date().getDay() + 6) % 7;
     this._sel = 0; this._also = new Set(); this._msg = ""; this._toast = ""; this._loading = false;
     if (this.shadowRoot) this.shadowRoot.innerHTML = "";
   }
@@ -487,6 +522,8 @@ class WanasScheduleCard extends HTMLElement {
   _render() {
     const t = this._t, root = this.shadowRoot;
     if (!root) return;
+    const o = (k) => opt(this._config, SCHEDULE_DEFAULTS, k);
+    const ro = o("read_only");
     if (!this._e["sensor:supply_airflow"] && !this._device) {
       root.innerHTML = `<style>${SHARED_CSS}</style><ha-card><div class="empty">${t.noDevice}</div></ha-card>`;
       return;
@@ -517,12 +554,14 @@ class WanasScheduleCard extends HTMLElement {
       }).join("");
       const rows = [0, 1, 2, 3, 4].map((i) => {
         const [a, b] = this._bounds(d, i);
-        const until = i < 4
-          ? `<span class="step"><button data-a="u-" data-i="${i}">−</button><span class="tm">${hm(b)}</span><button data-a="u+" data-i="${i}">+</button></span>`
-          : `<span class="tm fx">00:00</span>`;
-        const speed = `<span class="sg">${[0, 1, 2, 3].map((s) => `<button data-a="s" data-i="${i}" data-v="${s}" class="${d.speed[i] === s ? "on" : ""}">${ROMAN[s]}</button>`).join("")}</span>`;
-        const temp = `<span class="step"><button data-a="t-" data-i="${i}" ${d.temp[i] <= 10 ? "disabled" : ""}>−</button><span class="tm">${d.temp[i]}°</span><button data-a="t+" data-i="${i}" ${d.temp[i] >= 30 ? "disabled" : ""}>+</button></span>`;
-        return `<tr class="${i === this._sel ? "sel" : ""}"><td class="n">${i + 1}</td><td><span class="tm ${i === 0 ? "fx" : ""}">${hm(a)}</span></td><td>${until}</td><td>${speed}</td><td>${temp}</td></tr>`;
+        const until = i === 4 ? `<span class="tm fx">00:00</span>`
+          : ro ? `<span class="tm">${hm(b)}</span>`
+          : `<span class="step"><button data-a="u-" data-i="${i}">−</button><span class="tm">${hm(b)}</span><button data-a="u+" data-i="${i}">+</button></span>`;
+        const speed = ro ? `<span class="tm">${ROMAN[d.speed[i]]}</span>`
+          : `<span class="sg">${[0, 1, 2, 3].map((s) => `<button data-a="s" data-i="${i}" data-v="${s}" class="${d.speed[i] === s ? "on" : ""}">${ROMAN[s]}</button>`).join("")}</span>`;
+        const temp = ro ? `<span class="tm">${d.temp[i]}°</span>`
+          : `<span class="step"><button data-a="t-" data-i="${i}" ${d.temp[i] <= 10 ? "disabled" : ""}>−</button><span class="tm">${d.temp[i]}°</span><button data-a="t+" data-i="${i}" ${d.temp[i] >= 30 ? "disabled" : ""}>+</button></span>`;
+        return `<tr class="${i === this._sel ? "sel" : ""}"><td class="n">${i + 1}</td><td class="c-from"><span class="tm ${i === 0 ? "fx" : ""}">${hm(a)}</span></td><td>${until}</td><td>${speed}</td><td>${temp}</td></tr>`;
       }).join("");
       const also = [0, 1, 2, 3, 4, 5, 6].filter((i) => i !== this._day)
         .map((i) => `<button class="mini ${this._also.has(i) ? "on" : ""}" data-also="${i}" title="${t.dayLong[i]}">${t.dayShort[i]}</button>`).join("");
@@ -532,18 +571,18 @@ class WanasScheduleCard extends HTMLElement {
       }).join("");
       const changed = this._dirty(this._day) || this._also.size > 0;
       body = `
-        <div class="tl">
+        ${o("show_timeline") ? `<div class="tl">
           <div class="bars">${segs}</div>
           ${this._day === today ? `<div class="nowm" style="left:${nowMin / 14.4}%"></div>` : ""}
           <div class="ax"><span style="left:0">00</span><span style="left:25%">06</span><span style="left:50%">12</span><span style="left:75%">18</span><span style="left:100%">24</span></div>
-        </div>
-        <table><thead><tr><th></th><th>${t.from}</th><th>${t.to}</th><th>${t.speed}</th><th>${t.temp}</th></tr></thead><tbody>${rows}</tbody></table>
+        </div>` : ""}
+        ${o("show_table") ? `<table><thead><tr><th></th><th class="c-from">${t.from}</th><th>${t.to}</th><th>${t.speed}</th><th>${t.temp}</th></tr></thead><tbody>${rows}</tbody></table>` : ""}
         <div class="msg" role="status">${this._msg}</div>
-        <div class="apply"><span>${t.applyAlso}</span>${also}</div>
+        ${ro || !o("show_table") ? "" : `<div class="apply"><span>${t.applyAlso}</span>${also}</div>
         <div class="act"><button class="btn" id="undo" ${this._dirty(this._day) ? "" : "disabled"}>${t.undo}</button>
           <button class="btn pri" id="save" ${changed ? "" : "disabled"}>${t.save(this._also.size + 1, t.dayLong[this._day])}</button></div>
-        <div class="toast">${this._toast}</div>
-        <div class="label">${t.week}</div><div class="week">${week}</div>`;
+        <div class="toast">${this._toast}</div>`}
+        ${o("show_week") ? `<div class="label">${t.week}</div><div class="week">${week}</div>` : ""}`;
     }
 
     const days = [0, 1, 2, 3, 4, 5, 6].map((i) =>
@@ -600,9 +639,18 @@ class WanasScheduleCard extends HTMLElement {
       .ws { display: flex; height: 10px; border-radius: 3px; overflow: hidden; background: var(--wc-track); }
       .ws i { display: block; height: 100%; border-right: 1px solid var(--ha-card-background, var(--card-background-color, #000)); }
       .scroll { overflow-x: auto; }
+      ha-card { container-type: inline-size; }
+      .head:empty { display: none; }
+      @container (max-width: 520px) {
+        .step button { width: 22px; height: 24px; } .tm { min-width: 40px; font-size: 13px; }
+        .sg button { padding: 3px 5px; min-width: 22px; font-size: 11px; } td { padding: 5px 1px; }
+        .day { padding: 3px 6px; }
+      }
+      /* "From" is always the previous row's "until", so it is the first thing to go. */
+      @container (max-width: 400px) { .c-from { display: none; } }
     </style>
     <ha-card>
-      <div class="head"><h2>${t.schedule}</h2><span class="sub"><button id="reload">${t.readFromUnit}</button></span></div>
+      <div class="head">${o("hide_title") ? "" : `<h2>${this._config.title || t.schedule}</h2>`}${o("show_reload") ? `<span class="sub"><button id="reload">${t.readFromUnit}</button></span>` : ""}</div>
       <div class="days">${days}</div>
       <div class="scroll">${body}</div>
     </ha-card>`;
@@ -668,7 +716,36 @@ class WanasScheduleCard extends HTMLElement {
 
 /* ======================================================================== editor */
 
-/** Visual editor shared by both cards: the unit, and for wanas-card the compact tile. */
+const EDITOR_TEXT = {
+  pl: {
+    device_id: "Urządzenie", title: "Tytuł", hide_title: "Ukryj tytuł", compact: "Kompaktowy kafelek (jeden wiersz)",
+    sections: "Sekcje", content: "Zawartość", behaviour: "Zachowanie",
+    show_diagram: "Schemat przepływu", show_readouts: "Odczyty", show_modules: "Moduły", show_timed: "Funkcje czasowe",
+    show_now: "Bieżący przedział harmonogramu", show_clock: "Zegar sterownika (gdy się rozjedzie)",
+    readouts: "Pokazywane odczyty", modules: "Pokazywane moduły", timed: "Pokazywane funkcje czasowe",
+    filter_warning_days: "Ostrzeżenie o filtrze od (dni)", animate: "Animacja przepływu",
+    read_only: "Tylko podgląd (bez edycji)", show_timeline: "Oś doby", show_table: "Tabela przedziałów",
+    show_week: "Przegląd tygodnia", show_reload: "Przycisk „odczytaj z urządzenia”", start_day: "Dzień pokazywany na start",
+    today: "Dzisiaj", speed: "Bieg", airflow: "Przepływ", recovery: "Odzysk", filter: "Filtr",
+    h_device: "Puste = pierwsze znalezione urządzenie Wanas.", h_title: "Puste = domyślny tytuł.",
+    h_read_only: "Ukrywa przyciski zmiany godzin, biegów i temperatur oraz zapis.",
+  },
+  en: {
+    device_id: "Device", title: "Title", hide_title: "Hide title", compact: "Compact tile (one row)",
+    sections: "Sections", content: "Content", behaviour: "Behaviour",
+    show_diagram: "Airflow diagram", show_readouts: "Readouts", show_modules: "Modules", show_timed: "Timed functions",
+    show_now: "Current schedule period", show_clock: "Controller clock (when it drifts)",
+    readouts: "Readouts to show", modules: "Modules to show", timed: "Timed functions to show",
+    filter_warning_days: "Filter warning from (days)", animate: "Airflow animation",
+    read_only: "View only (no editing)", show_timeline: "Day timeline", show_table: "Period table",
+    show_week: "Week overview", show_reload: "\"Read from unit\" button", start_day: "Day shown first",
+    today: "Today", speed: "Speed", airflow: "Airflow", recovery: "Recovery", filter: "Filter",
+    h_device: "Empty = the first Wanas device found.", h_title: "Empty = default title.",
+    h_read_only: "Hides the time, speed and temperature buttons and saving.",
+  },
+};
+
+/** Visual editor for both cards; `kind` picks the option set. */
 class WanasCardEditor extends HTMLElement {
   setConfig(config) {
     this._config = { ...(config || {}) };
@@ -676,32 +753,93 @@ class WanasCardEditor extends HTMLElement {
   }
 
   set hass(hass) {
+    const first = !this._hass;
     this._hass = hass;
-    this._render();
+    if (first) this._render();
+    else if (this._form) this._form.hass = hass;
+  }
+
+  get _defaults() { return this.kind === "schedule" ? SCHEDULE_DEFAULTS : CARD_DEFAULTS; }
+
+  _schema() {
+    const e = (this._hass?.locale?.language || this._hass?.language || "en").startsWith("pl") ? EDITOR_TEXT.pl : EDITOR_TEXT.en;
+    const t = lang(this._hass);
+    const bool = (name) => ({ name, selector: { boolean: {} } });
+    const head = [
+      { name: "device_id", selector: { device: { integration: "wanas" } } },
+      { type: "grid", name: "", flatten: true, schema: [{ name: "title", selector: { text: {} } }, bool("hide_title")] },
+    ];
+    if (this.kind === "schedule") {
+      return [
+        ...head,
+        { type: "expandable", name: "", flatten: true, title: e.sections, icon: "mdi:view-dashboard-outline", expanded: true,
+          schema: [bool("show_timeline"), bool("show_table"), bool("show_week"), bool("show_reload")] },
+        { type: "expandable", name: "", flatten: true, title: e.behaviour, icon: "mdi:tune-variant", expanded: true,
+          schema: [
+            bool("read_only"),
+            { name: "start_day", selector: { select: { mode: "dropdown", options: [
+              { value: "today", label: e.today },
+              ...DAY_KEYS.map((k, i) => ({ value: k, label: t.dayLong[i] })),
+            ] } } },
+          ] },
+      ];
+    }
+    if (this._config.compact) return [...head, bool("compact")];
+    const { map } = wanasEntities(this._hass, this._config.device_id);
+    const present = (keys) => keys.filter((k) => map[`switch:${k}`]);
+    return [
+      ...head,
+      bool("compact"),
+      { type: "expandable", name: "", flatten: true, title: e.sections, icon: "mdi:view-dashboard-outline", expanded: true,
+        schema: ["show_diagram", "show_readouts", "show_modules", "show_timed", "show_now", "show_clock"].map(bool) },
+      { type: "expandable", name: "", flatten: true, title: e.content, icon: "mdi:format-list-checks",
+        schema: [
+          { name: "readouts", selector: { select: { multiple: true, mode: "list",
+            options: READOUTS.map((k) => ({ value: k, label: e[k] })) } } },
+          { name: "modules", selector: { select: { multiple: true, mode: "list",
+            options: present(MODULES).map((k) => ({ value: k, label: t.names[k] })) } } },
+          { name: "timed", selector: { select: { multiple: true, mode: "list",
+            options: present(TIMED.map((x) => x[0])).map((k) => ({ value: k, label: t.names[k] })) } } },
+        ] },
+      { type: "expandable", name: "", flatten: true, title: e.behaviour, icon: "mdi:tune-variant",
+        schema: [
+          { name: "filter_warning_days", selector: { number: { min: 0, max: 90, mode: "box" } } },
+          bool("animate"),
+        ] },
+    ];
   }
 
   _render() {
     if (!this._hass || !this._config) return;
-    const t = lang(this._hass);
+    const e = (this._hass.locale?.language || this._hass.language || "en").startsWith("pl") ? EDITOR_TEXT.pl : EDITOR_TEXT.en;
     if (!this._form) {
       this._form = document.createElement("ha-form");
-      this._form.computeLabel = (s) => (s.name === "device_id" ? t.edDevice : t.edCompact);
-      this._form.addEventListener("value-changed", (ev) => {
-        const config = { ...this._config, ...ev.detail.value };
-        for (const key of ["device_id", "compact"]) {
-          if (config[key] === undefined || config[key] === "" || config[key] === false) delete config[key];
-        }
-        this._config = config;
-        this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
-      });
+      this._form.computeLabel = (s) => e[s.name] ?? s.name;
+      this._form.computeHelper = (s) => e[`h_${s.name}`];
+      this._form.addEventListener("value-changed", (ev) => this._changed(ev.detail.value));
       this.append(this._form);
     }
     this._form.hass = this._hass;
-    this._form.data = this._config;
-    this._form.schema = [
-      { name: "device_id", selector: { device: { integration: "wanas" } } },
-      ...(this.compactOption ? [{ name: "compact", selector: { boolean: {} } }] : []),
-    ];
+    this._form.data = { ...this._defaults, ...this._config };
+    this._form.schema = this._schema();
+  }
+
+  _changed(value) {
+    const defaults = this._defaults;
+    const config = { type: this._config.type, ...value };
+    for (const [key, def] of Object.entries(defaults)) {
+      if (JSON.stringify(config[key]) === JSON.stringify(def)) delete config[key];
+    }
+    for (const key of ["device_id", "title"]) if (!config[key]) delete config[key];
+    // Lists keep the order the card uses, whatever order they were ticked in.
+    for (const [key, order] of [["readouts", READOUTS], ["modules", MODULES], ["timed", TIMED.map((x) => x[0])]]) {
+      if (Array.isArray(config[key])) config[key] = order.filter((k) => config[key].includes(k));
+    }
+    const compactToggled = !!config.compact !== !!this._config.compact;
+    this._config = config;
+    if (compactToggled) this._render();
+    else this._form.data = { ...defaults, ...config };
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
   }
 }
 

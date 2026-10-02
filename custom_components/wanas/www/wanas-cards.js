@@ -14,7 +14,7 @@
  * restart the airflow animation each time.
  */
 
-const VERSION = "3.5.1";
+const VERSION = "3.5.2";
 const ROMAN = ["0", "I", "II", "III"];
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
@@ -114,6 +114,8 @@ const SHARED_CSS = `
   .chip .cd { font-family: var(--wc-mono); font-size: 11px; color: var(--wc-soft); }
   .chip.on .cd { color: var(--wc-accent); }
   .empty { color: var(--wc-soft); font-size: 13px; padding: 8px 0; }
+  /* Class rules such as .ov { display: flex } would otherwise win over the hidden attribute. */
+  [hidden] { display: none !important; }
   @media (prefers-reduced-motion: reduce) { .dash, .fan { animation: none !important; } }
 `;
 
@@ -322,6 +324,7 @@ class WanasCard extends HTMLElement {
         <path id="pB" class="duct" d="M230 80 C 300 40, 330 40, 370 60 L 380 170" stroke="var(--wc-accent)" stroke-dasharray="1 9" stroke-width="3" opacity="0"/>
         <rect class="core" x="268" y="93" width="64" height="64" rx="6" transform="rotate(45 300 125)"/>
         <text class="lbl" x="300" y="210" text-anchor="middle">${t.core}</text>
+        <rect x="266" y="109" width="68" height="34" rx="7" fill="var(--ha-card-background, var(--card-background-color, #fff))" stroke="var(--wc-line)"/>
         <text id="eff" x="300" y="122" text-anchor="middle" style="font-size:12px"></text>
         <text id="effP" x="300" y="138" text-anchor="middle" style="font-size:11px; fill: var(--wc-soft)"></text>
         <g transform="translate(150 80)"><g class="fan" id="f1"><circle r="13" fill="var(--ha-card-background, var(--card-background-color, #111))" stroke="var(--wc-soft)"/><path d="M0 -9 C4 -6 4 -2 0 0 C-4 2 -4 6 0 9 M-9 0 C-6 -4 -2 -4 0 0 C2 4 6 4 9 0" stroke="var(--primary-text-color)" stroke-width="1.6" fill="none"/></g></g>

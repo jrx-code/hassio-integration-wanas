@@ -203,7 +203,8 @@
         "name": "Temperatura dodatkowa"
       },
       "filter_replacement": {
-        "name": "Wymiana filtra"
+        "name": "Wymiana filtra",
+        "unit_of_measurement": "dni"
       },
       "system_errors": {
         "name": "Błędy systemu"
@@ -320,13 +321,16 @@
     },
     "number": {
       "heater_days": {
-        "name": "Nagrzewnica (dni)"
+        "name": "Nagrzewnica (dni)",
+        "unit_of_measurement": "dni"
       },
       "cooler_days": {
-        "name": "Chłodnica (dni)"
+        "name": "Chłodnica (dni)",
+        "unit_of_measurement": "dni"
       },
       "vacation": {
-        "name": "Tryb urlopowy (dni)"
+        "name": "Tryb urlopowy (dni)",
+        "unit_of_measurement": "dni"
       },
       "fireplace": {
         "name": "Funkcja kominek"

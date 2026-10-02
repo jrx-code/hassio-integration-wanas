@@ -304,8 +304,10 @@ type: custom:wanas-schedule-card   # five periods per day, as on the unit's pane
 - **wanas-schedule-card** shows one day as a 24-hour timeline (bar height is the fan
   speed, the number above is the temperature) and a table of the five periods. Edits follow
   the same rules as the `time` entities; one save can write several days.
+- Both have a visual editor: pick the unit (empty means the first one found) and, for
+  `wanas-card`, the compact tile.
 - Both find their entities through the entity registry, so renamed entity ids keep
-  working. With more than one unit, add `device_id: <id>`.
+  working. With more than one unit, add `device_id: <id>` (or pick it in the editor).
 - Colours come from the theme (`--primary-color`, `--warning-color`, `--divider-color`...).
 
 The integration keeps a copy of the whole week in memory: read at start-up and every day

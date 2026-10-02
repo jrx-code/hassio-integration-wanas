@@ -231,6 +231,33 @@
       },
       "schedule_summary": {
         "name": "Harmonogram (wybrany dzień)"
+      },
+      "current_period": {
+        "name": "Bieżący przedział harmonogramu"
+      },
+      "heat_recovery_power": {
+        "name": "Moc odzysku ciepła",
+        "state_attributes": {
+          "mode": {
+            "name": "Tryb",
+            "state": {
+              "heating": "Odzysk ciepła",
+              "cooling": "Odzysk chłodu"
+            }
+          },
+          "temperature_gain": {
+            "name": "Przyrost temperatury nawiewu"
+          },
+          "extract_side_power": {
+            "name": "Moc po stronie wywiewu"
+          }
+        }
+      },
+      "heat_recovery_efficiency": {
+        "name": "Sprawność odzysku ciepła"
+      },
+      "heat_recovery_energy": {
+        "name": "Energia odzyskana"
       }
     },
     "binary_sensor": {
@@ -567,6 +594,10 @@
         "config_entry_id": {
           "name": "Urządzenie",
           "description": "Rekuperator Wanas, potrzebny tylko przy więcej niż jednym."
+        },
+        "refresh": {
+          "name": "Odśwież",
+          "description": "Odczytaj tydzień z urządzenia zamiast z pamięci (siedem zapisów wyboru dnia)."
         }
       }
     },

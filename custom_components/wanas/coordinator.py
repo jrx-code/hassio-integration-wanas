@@ -93,6 +93,10 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         # has to be the only one in flight. RTU frames carry no transaction id, so
         # overlapping requests cannot be told apart on the way back.
         self._bus = asyncio.Lock()
+        # Last known schedule of every day (0 = Sunday), from a full week read. Kept in
+        # step with each poll for the day register 8 selects and with every schedule
+        # write, so it is re-read from the bus only at start-up and once a day.
+        self.week: dict[int, list[int]] | None = None
 
         # Build effective register map: defaults overridden by user options
         defaults = get_default_registers()
@@ -202,7 +206,38 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
                 self._drop_client()
                 raise UpdateFailed(f"Error fetching data: {err}") from err
 
+        self._sync_week_from_poll(data)
         return data
+
+    def _sync_week_from_poll(self, data: dict[int, int]) -> None:
+        """Take the selected day's program from a regular poll into the week cache.
+
+        Edits made on the unit's own panel show up here for whichever day register 8
+        points at, without stepping through the week.
+        """
+        if self.week is None:
+            return
+        day = data.get(SCHEDULE_DAY_ADDRESS)
+        addresses = range(SCHEDULE_FIRST_ADDRESS, SCHEDULE_FIRST_ADDRESS + SCHEDULE_REGISTER_COUNT)
+        if day is None or not 0 <= day < 7 or any(a not in data for a in addresses):
+            return
+        self.week[day] = [data[a] for a in addresses]
+
+    async def async_refresh_week(self) -> bool:
+        """Read the whole week into the cache and tell the entities.
+
+        A week read writes register 8 seven times. Whether the unit keeps that
+        register in EEPROM is not documented, so this runs at start-up and once a
+        day rather than on every poll or every time a dashboard opens.
+        """
+        try:
+            week = await self.async_read_week()
+        except HomeAssistantError as err:
+            _LOGGER.warning("Wanas: could not read the weekly schedule: %s", err)
+            return False
+        self.week = week
+        self.async_update_listeners()
+        return True
 
     async def _write_locked(self, address: int, value: int) -> None:
         """Write one holding register. The caller must hold the bus lock."""
@@ -295,6 +330,12 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
                         await self._write_locked(address, value)
             finally:
                 await self._write_locked(SCHEDULE_DAY_ADDRESS, selected)
+        if self.week is not None:
+            for day in days:
+                program = list(self.week.get(day, [0] * SCHEDULE_REGISTER_COUNT))
+                for address, value in values.items():
+                    program[address - SCHEDULE_FIRST_ADDRESS] = value
+                self.week[day] = program
         await self.async_request_refresh()
 
     async def async_close(self) -> None:

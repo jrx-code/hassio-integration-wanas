@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -20,6 +21,7 @@ from .const import (
 )
 from .coordinator import WanasCoordinator
 from .entity import device_key
+from .frontend import async_register_cards
 from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
@@ -76,8 +78,9 @@ def _purge_retired_entities(hass: HomeAssistant, entry: WanasConfigEntry) -> Non
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the weekly program services."""
+    """Register the weekly schedule services and the dashboard cards."""
     async_setup_services(hass)
+    await async_register_cards(hass)
     return True
 
 
@@ -130,6 +133,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: WanasConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    # The week cache feeds the current-period sensor and the schedule card. Read it in
+    # the background so a slow bus does not hold up start-up, then once a day at a
+    # quiet hour (03:17) to pick up edits made on the panel for other days.
+    entry.async_create_background_task(
+        hass, coordinator.async_refresh_week(), f"{DOMAIN} week read"
+    )
+
+    async def _daily_week_read(_now) -> None:
+        await coordinator.async_refresh_week()
+
+    entry.async_on_unload(
+        async_track_time_change(hass, _daily_week_read, hour=3, minute=17, second=0)
+    )
 
     return True
 

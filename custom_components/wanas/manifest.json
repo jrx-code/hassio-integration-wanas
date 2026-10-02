@@ -1,6 +1,10 @@
 {
   "domain": "wanas",
   "name": "Wanas",
+  "after_dependencies": [
+    "frontend",
+    "http"
+  ],
   "codeowners": [
     "@jrx-code"
   ],
@@ -15,5 +19,5 @@
   "requirements": [
     "pymodbus>=3.10.0"
   ],
-  "version": "3.2.1"
+  "version": "3.3.0"
 }

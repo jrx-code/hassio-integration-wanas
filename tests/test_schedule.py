@@ -149,7 +149,7 @@ async def test_get_schedule_reads_every_day_and_restores_the_selector(
     unit.week[6][4] = 1
 
     week = await hass.services.async_call(
-        DOMAIN, "get_schedule", {}, blocking=True, return_response=True
+        DOMAIN, "get_schedule", {"refresh": True}, blocking=True, return_response=True
     )
 
     assert set(week) == {
@@ -327,3 +327,57 @@ async def test_timed_function_switch_arms_the_longest_run_and_follows_the_countd
     await loaded.runtime_data.async_refresh()
     await hass.async_block_till_done()
     assert hass.states.get(switch_id).state == "off"
+
+
+async def test_week_is_read_at_setup_and_served_from_the_cache(
+    hass: HomeAssistant, loaded, unit: FakeUnit
+) -> None:
+    """get_schedule answers from memory; only refresh steps register 8 again."""
+    assert loaded.runtime_data.week is not None
+    unit.writes.clear()
+
+    week = await hass.services.async_call(
+        DOMAIN, "get_schedule", {}, blocking=True, return_response=True
+    )
+    assert week["monday"]["periods"][0]["until"] == "05:00"
+    assert unit.writes == []
+
+    await hass.services.async_call(
+        DOMAIN, "get_schedule", {"refresh": True}, blocking=True, return_response=True
+    )
+    assert [address for address, _ in unit.writes].count(8) == 8  # 7 days + restore
+
+
+async def test_cache_follows_polls_and_writes(
+    hass: HomeAssistant, loaded, unit: FakeUnit
+) -> None:
+    """Panel edits show up for the selected day; set_schedule updates the days it wrote."""
+    coordinator = loaded.runtime_data
+    unit.week[0][4] = 3  # someone changed Sunday period 1 on the panel; 8 points at Sunday
+    await coordinator.async_refresh()
+    assert coordinator.week[0][4] == 3
+
+    unit.writes.clear()
+    await hass.services.async_call(
+        DOMAIN, "set_schedule", {"days": ["friday"], "periods": PANEL_DAY}, blocking=True
+    )
+    assert coordinator.week[5][:4] == [360, 420, 840, 900]
+    assert coordinator.week[4][:4] == [300, 480, 960, 1320]
+
+
+async def test_current_period_follows_the_clock(
+    hass: HomeAssistant, loaded, unit: FakeUnit, freezer
+) -> None:
+    """Friday 2026-10-02 at 06:30 local is period 2 of the panel day written for Friday."""
+    await hass.services.async_call(
+        DOMAIN, "set_schedule", {"days": ["friday"], "periods": PANEL_DAY}, blocking=True
+    )
+    freezer.move_to("2026-10-02T04:30:00+00:00")  # 06:30 in Warsaw
+    await loaded.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_entity_id(hass, "sensor", "current_period"))
+    assert state.state == "2"
+    assert state.attributes["day"] == "friday"
+    assert (state.attributes["from"], state.attributes["until"]) == ("06:00", "07:00")
+    assert (state.attributes["speed"], state.attributes["temperature"]) == (2, 20)

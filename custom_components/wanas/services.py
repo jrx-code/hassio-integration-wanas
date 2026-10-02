@@ -12,7 +12,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -34,6 +34,7 @@ ATTR_PERIODS = "periods"
 ATTR_UNTIL = "until"
 ATTR_SPEED = "speed"
 ATTR_TEMPERATURE = "temperature"
+ATTR_REFRESH = "refresh"
 
 
 def _until(value: Any) -> int:
@@ -74,7 +75,12 @@ def _periods(value: Any) -> list[dict[str, int]]:
     return periods
 
 
-GET_SCHEDULE_SCHEMA = vol.Schema({vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string})
+GET_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string,
+        vol.Optional(ATTR_REFRESH, default=False): cv.boolean,
+    }
+)
 
 # Schema errors become a 400 on the REST API; ServiceValidationError raised in the
 # handler does not, so everything checkable without the bus is checked here.
@@ -110,7 +116,13 @@ def _coordinator(hass: HomeAssistant, call: ServiceCall) -> WanasCoordinator:
 
 async def _get_schedule(call: ServiceCall) -> ServiceResponse:
     coordinator = _coordinator(call.hass, call)
-    week = await coordinator.async_read_week()
+    # The cache is kept current by polls and writes; reading the week from the bus
+    # means seven writes of register 8, so only on request or when nothing is cached.
+    if (call.data[ATTR_REFRESH] or coordinator.week is None) and not (
+        await coordinator.async_refresh_week()
+    ):
+        raise HomeAssistantError("Wanas: the weekly schedule could not be read from the unit")
+    week = coordinator.week or {}
     return {
         SCHEDULE_DAYS[day]: {ATTR_PERIODS: day_periods(values)}
         for day, values in week.items()

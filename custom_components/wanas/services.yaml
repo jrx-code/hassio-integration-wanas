@@ -4,6 +4,10 @@ get_schedule:
       selector:
         config_entry:
           integration: wanas
+    refresh:
+      default: false
+      selector:
+        boolean:
 
 set_schedule:
   fields:

@@ -1,0 +1,749 @@
+<title>Karty Wanas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the JrX wall panel. A blue dusk ground, translucent navy cards, words in serif
+   small caps, readouts in mono. Amber appears only where something needs a person. */
+:root {
+  color-scheme: dark;
+  --ground-1: #6e8fbf;
+  --ground-2: #3d5784;
+  --card: rgba(0, 0, 20, 0.62);
+  --card-edge: rgba(255, 255, 255, 0.08);
+  --ink: #dbe0e4;
+  --ink-soft: rgba(219, 224, 228, 0.62);
+  --ink-faint: rgba(219, 224, 228, 0.34);
+  --cool: #7cb3f9;
+  --warm: #e7a59a;
+  --calm: #7fe1a8;
+  --amber: #f0b429;
+  --amber-ink: #241a02;
+  --track: rgba(255, 255, 255, 0.07);
+  --serif: 'Zen Old Mincho', 'Noto Serif', Georgia, serif;
+  --mono: 'Roboto Mono', 'SF Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--ground-2); }
+body {
+  margin: 0;
+  min-height: 100%;
+  background: radial-gradient(120% 80% at 70% 0%, var(--ground-1) 0%, var(--ground-2) 70%) fixed, var(--ground-2);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 64px; }
+h1, h2, h3 { font-weight: 600; text-wrap: balance; margin: 0; }
+.cap { font-variant: small-caps; letter-spacing: 0.08em; text-transform: lowercase; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+a { color: var(--cool); }
+:focus-visible { outline: 2px solid var(--cool); outline-offset: 2px; border-radius: 6px; }
+
+header.top { display: grid; gap: 10px; margin-bottom: 36px; max-width: 72ch; }
+header.top h1 { font-size: clamp(30px, 4.4vw, 44px); letter-spacing: 0.02em; }
+header.top p { margin: 0; color: var(--ink-soft); }
+.stamp { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
+
+section.block { display: grid; gap: 18px; margin-top: 44px; }
+.block-head { display: grid; gap: 6px; max-width: 72ch; }
+.block-head h2 { font-size: 24px; }
+.block-head p { margin: 0; color: var(--ink-soft); }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--ink-faint); text-transform: uppercase; }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: 22px; align-items: start; }
+@media (max-width: 900px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+
+/* --- the card shell, as Home Assistant renders ha-card with the JrX theme --- */
+.ha-card {
+  background: var(--card);
+  border: 1px solid var(--card-edge);
+  border-radius: 18px;
+  padding: 18px 20px 20px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  min-width: 0;
+}
+.card-title { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.card-title h3 { font-size: 15px; font-weight: 600; }
+.card-title .sub { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+
+/* --- rekuperator card --- */
+.flow { width: 100%; height: auto; display: block; margin: 8px 0 4px; }
+.flow text { font-family: var(--mono); fill: var(--ink); }
+.flow .lbl { font-family: var(--serif); font-variant: small-caps; letter-spacing: 0.08em; fill: var(--ink-soft); font-size: 12px; }
+.flow .t { font-size: 17px; font-weight: 500; }
+.duct { fill: none; stroke-width: 7; stroke-linecap: round; }
+.dash { fill: none; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 12; stroke: rgba(255,255,255,0.85); animation: run linear infinite; }
+@keyframes run { to { stroke-dashoffset: -28; } }
+.core { fill: rgba(255,255,255,0.06); stroke: rgba(255,255,255,0.35); stroke-width: 1.2; }
+.fan { transform-box: fill-box; transform-origin: center; animation: spin linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .dash, .fan { animation: none !important; } }
+
+.readouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 6px; }
+.ro { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--track); min-width: 0; }
+.ro .k { font-size: 12px; color: var(--ink-soft); }
+.ro .v { font-family: var(--mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.ro .v small { font-size: 12px; color: var(--ink-soft); margin-left: 3px; }
+.ro .n { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+.ro.attn { background: color-mix(in srgb, var(--amber) 16%, transparent); }
+.ro.attn .v { color: var(--amber); }
+@media (max-width: 460px) { .readouts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.row-label { font-size: 12px; color: var(--ink-soft); margin: 16px 0 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font: inherit; font-size: 13px; color: var(--ink-soft);
+  background: transparent; border: 1px solid var(--card-edge); border-radius: 999px;
+  padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+}
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); }
+.chip[aria-pressed="true"] { color: var(--ink); border-color: rgba(124,179,249,0.6); background: rgba(124,179,249,0.12); }
+.chip[aria-pressed="true"] .dot { background: var(--cool); }
+.chip .cd { font-family: var(--mono); font-size: 11px; color: var(--cool); }
+.chip:hover { border-color: rgba(255,255,255,0.25); }
+
+.now-line {
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--card-edge);
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline;
+}
+.now-line .what { font-size: 13px; }
+.now-line .what b { font-family: var(--mono); font-weight: 500; }
+.now-line button { font: inherit; font-size: 12px; color: var(--cool); background: none; border: 0; padding: 0; cursor: pointer; }
+
+.override {
+  display: flex; gap: 10px; align-items: center; margin-top: 12px; padding: 9px 12px; border-radius: 12px;
+  background: rgba(124,179,249,0.10); font-size: 13px;
+}
+.override .tag { font-family: var(--mono); font-size: 11px; color: var(--cool); border: 1px solid rgba(124,179,249,0.45); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+
+/* compact tile */
+.tile { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.tile .gear { font-family: var(--mono); font-size: 30px; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(124,179,249,0.5); }
+.tile .mid { display: grid; gap: 2px; min-width: 0; }
+.tile .mid .l1 { font-size: 15px; }
+.tile .mid .l2 { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .right { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+.tile .right b { display: block; font-size: 18px; color: var(--ink); font-weight: 500; }
+
+/* simulation panel */
+.sim { display: grid; gap: 14px; }
+.sim .ha-card { background: rgba(0,0,20,0.35); }
+.sim h3 { font-size: 14px; }
+.sim p { margin: 0; font-size: 13px; color: var(--ink-soft); }
+.ctl { display: grid; gap: 8px; }
+.ctl label { font-size: 12px; color: var(--ink-soft); }
+.seg { display: inline-flex; border: 1px solid var(--card-edge); border-radius: 10px; overflow: hidden; }
+.seg button { font: inherit; font-family: var(--mono); font-size: 13px; color: var(--ink-soft); background: transparent; border: 0; padding: 6px 12px; cursor: pointer; min-width: 40px; }
+.seg button + button { border-left: 1px solid var(--card-edge); }
+.seg button[aria-pressed="true"] { background: rgba(124,179,249,0.18); color: var(--ink); }
+input[type="range"] { width: 100%; accent-color: var(--cool); }
+.toggle-line { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* --- harmonogram card --- */
+.days { display: flex; gap: 4px; flex-wrap: wrap; margin: 12px 0 14px; }
+.day {
+  font: inherit; font-size: 13px; color: var(--ink-soft); background: transparent; border: 1px solid transparent;
+  border-radius: 10px; padding: 5px 10px; cursor: pointer; font-variant: small-caps; letter-spacing: 0.06em;
+}
+.day[aria-selected="true"] { color: var(--ink); border-color: var(--card-edge); background: var(--track); }
+.day .today { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--calm); margin-left: 5px; vertical-align: middle; }
+.day.dirty::after { content: '•'; color: var(--cool); margin-left: 4px; }
+
+.timeline { position: relative; height: 112px; margin: 4px 0 6px; }
+.tl-bars { position: absolute; inset: 22px 0 22px 0; display: flex; align-items: flex-end; border-bottom: 1px solid var(--card-edge); }
+.tl-seg { position: relative; height: 100%; display: flex; align-items: flex-end; cursor: pointer; }
+.tl-seg .bar { width: 100%; border-radius: 6px 6px 0 0; background: var(--cool); transition: height 0.25s ease, opacity 0.2s; margin-inline: 1px; }
+.tl-seg .temp { position: absolute; left: 0; right: 0; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+.tl-seg.sel .bar { box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset; }
+.tl-axis { position: absolute; left: 0; right: 0; bottom: 0; height: 18px; font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
+.tl-axis span { position: absolute; transform: translateX(-50%); }
+.tl-axis span:first-child { transform: none; }
+.tl-axis span:last-child { transform: translateX(-100%); }
+.tl-now { position: absolute; top: 14px; bottom: 18px; width: 0; border-left: 1px dashed var(--calm); pointer-events: none; }
+.tl-now::before { content: 'teraz'; position: absolute; top: -14px; left: 4px; font-family: var(--mono); font-size: 10px; color: var(--calm); }
+.tl-scale { position: absolute; right: 0; top: 0; font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
+
+table.periods { width: 100%; border-collapse: collapse; margin-top: 10px; }
+table.periods th { text-align: left; font-weight: 400; font-size: 12px; color: var(--ink-soft); padding: 6px 4px; border-bottom: 1px solid var(--card-edge); font-variant: small-caps; letter-spacing: 0.06em; }
+table.periods td { padding: 7px 4px; border-bottom: 1px solid var(--card-edge); vertical-align: middle; }
+table.periods tr.sel td { background: rgba(124,179,249,0.06); }
+table.periods .n { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); width: 22px; }
+.time { font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+.time.fixed { color: var(--ink-faint); }
+.step { display: inline-flex; align-items: center; gap: 2px; }
+.step button { font: inherit; font-family: var(--mono); width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--card-edge); background: transparent; color: var(--ink-soft); cursor: pointer; line-height: 1; }
+.step button:hover:not(:disabled) { color: var(--ink); border-color: rgba(255,255,255,0.25); }
+.step button:disabled { opacity: 0.3; cursor: default; }
+.step .time, .step .val { min-width: 50px; text-align: center; }
+.val { font-family: var(--mono); font-size: 14px; }
+.seg.small button { padding: 4px 9px; min-width: 32px; font-size: 12px; }
+.table-scroll { overflow-x: auto; }
+
+.msg { min-height: 20px; font-size: 12.5px; margin-top: 8px; color: var(--amber); }
+.apply { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.apply .lab { font-size: 12px; color: var(--ink-soft); margin-right: 4px; }
+.mini { font: inherit; font-size: 12px; font-variant: small-caps; letter-spacing: 0.06em; color: var(--ink-soft); background: transparent; border: 1px solid var(--card-edge); border-radius: 8px; padding: 3px 8px; cursor: pointer; }
+.mini[aria-pressed="true"] { color: var(--ink); border-color: rgba(124,179,249,0.6); background: rgba(124,179,249,0.12); }
+.mini:disabled { opacity: 0.35; cursor: default; }
+.actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+.btn { font: inherit; font-size: 13px; border-radius: 10px; padding: 7px 14px; cursor: pointer; border: 1px solid var(--card-edge); background: transparent; color: var(--ink-soft); }
+.btn.primary { background: var(--cool); border-color: var(--cool); color: #061224; font-weight: 600; }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.toast { font-family: var(--mono); font-size: 12px; color: var(--calm); min-height: 18px; text-align: right; margin-top: 6px; }
+
+.week { display: grid; gap: 4px; margin-top: 14px; }
+.wk { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; cursor: pointer; }
+.wk .d { font-size: 11px; color: var(--ink-faint); font-variant: small-caps; letter-spacing: 0.06em; }
+.wk .s { display: flex; height: 10px; border-radius: 3px; overflow: hidden; background: var(--track); }
+.wk .s i { display: block; height: 100%; }
+.wk.on .d { color: var(--ink); }
+
+pre.call { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.55; color: var(--ink-soft); background: rgba(0,0,20,0.45); border: 1px solid var(--card-edge); border-radius: 12px; padding: 12px 14px; overflow-x: auto; white-space: pre; }
+
+/* --- rationale + wiring --- */
+.notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 760px) { .notes { grid-template-columns: minmax(0, 1fr); } }
+.note h3 { font-size: 16px; margin-bottom: 8px; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--ink-soft); font-size: 14px; }
+.note ul b { color: var(--ink); font-weight: 600; }
+table.map { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.map th, table.map td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--card-edge); vertical-align: top; }
+table.map th { font-weight: 400; color: var(--ink-soft); font-variant: small-caps; letter-spacing: 0.06em; }
+table.map code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+table.map td.new { color: var(--cool); font-family: var(--mono); font-size: 11px; white-space: nowrap; }
+footer { margin-top: 48px; font-size: 12px; color: var(--ink-faint); display: grid; gap: 4px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">hassio-integration-wanas · prototypy kart</span>
+    <h1>Karty Wanas</h1>
+    <p>Dwie karty dostarczane razem z integracją: <b>Rekuperator</b> (stan i sterowanie) oraz
+      <b>Harmonogram</b> (pięć przedziałów dnia, jak tabela „Programy” na panelu). Obie w języku
+      motywu JrX: słowa szeryfem, odczyty monospace, bursztyn tylko tam, gdzie coś wymaga człowieka.
+      Wszystko na tej stronie jest klikalne.</p>
+    <span class="stamp">wartości startowe: produkcja HA, 02.10.2026 17:51 (odczyt encji Wanas)</span>
+  </header>
+
+  <!-- ===================================================== REKUPERATOR -->
+  <section class="block" id="rekuperator">
+    <div class="block-head">
+      <span class="eyebrow">karta 1</span>
+      <h2>Rekuperator</h2>
+      <p>Schemat przepływu zamiast zdjęcia urządzenia: powietrze zewnętrzne wchodzi z lewej, przez
+        wymiennik trafia do domu, a zużyte wraca drugim kanałem. Kolor kanału to temperatura powietrza
+        w nim, szybkość kresek to bieg. Pod schematem trzy liczby, które się sprawdza codziennie,
+        a niżej przełączniki modułów i funkcje czasowe.</p>
+    </div>
+
+    <div class="stage">
+      <div style="display:grid; gap:18px; min-width:0">
+        <div class="ha-card" id="cardA">
+          <div class="card-title">
+            <h3 class="cap">Rekuperator</h3>
+            <span class="sub" id="aClock">zegar sterownika 17:51 · zgodny</span>
+          </div>
+
+          <svg class="flow" id="flow" viewBox="0 0 640 250" role="img" aria-label="Schemat przepływu powietrza przez rekuperator">
+            <defs>
+              <linearGradient id="gSupply" x1="0" x2="1"><stop id="gS0" offset="0"/><stop id="gS1" offset="1"/></linearGradient>
+              <linearGradient id="gExhaust" x1="1" x2="0"><stop id="gE0" offset="0"/><stop id="gE1" offset="1"/></linearGradient>
+            </defs>
+            <!-- house outline on the right -->
+            <path d="M420 230 V96 L520 40 L620 96 V230" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.2"/>
+            <text class="lbl" x="520" y="222" text-anchor="middle">dom</text>
+            <text class="lbl" x="70" y="222" text-anchor="middle">na zewnątrz</text>
+
+            <!-- supply: outdoor (left top) -> core -> house -->
+            <path id="pSupply" class="duct" stroke="url(#gSupply)" d="M30 80 H230 L300 125 L370 170 H600"/>
+            <path id="dSupply" class="dash" d="M30 80 H230 L300 125 L370 170 H600"/>
+            <!-- exhaust: house -> core -> outside (left bottom) -->
+            <path id="pExhaust" class="duct" stroke="url(#gExhaust)" d="M600 80 H370 L300 125 L230 170 H30"/>
+            <path id="dExhaust" class="dash" d="M600 80 H370 L300 125 L230 170 H30" style="animation-direction:normal"/>
+            <!-- bypass route, shown when bypass is open -->
+            <path id="pBypass" class="duct" d="M230 80 C 300 40, 330 40, 370 60 L 380 170" stroke="var(--cool)" stroke-dasharray="1 9" stroke-width="3" opacity="0"/>
+
+            <rect class="core" x="268" y="93" width="64" height="64" rx="6" transform="rotate(45 300 125)"/>
+            <text class="lbl" x="300" y="210" text-anchor="middle">wymiennik</text>
+            <text id="tEff" x="300" y="129" text-anchor="middle" style="font-size:12px; fill:var(--ink)">77%</text>
+
+            <g transform="translate(150 80)"><g class="fan" id="fan1"><circle r="13" fill="rgba(0,0,20,0.9)" stroke="rgba(255,255,255,0.5)"/><path d="M0 -9 C4 -6 4 -2 0 0 C-4 2 -4 6 0 9 M-9 0 C-6 -4 -2 -4 0 0 C2 4 6 4 9 0" stroke="var(--ink)" stroke-width="1.6" fill="none"/></g></g>
+            <g transform="translate(470 80)"><g class="fan" id="fan2"><circle r="13" fill="rgba(0,0,20,0.9)" stroke="rgba(255,255,255,0.5)"/><path d="M0 -9 C4 -6 4 -2 0 0 C-4 2 -4 6 0 9 M-9 0 C-6 -4 -2 -4 0 0 C2 4 6 4 9 0" stroke="var(--ink)" stroke-width="1.6" fill="none"/></g></g>
+
+            <text class="lbl" x="30" y="62">czerpnia</text>
+            <text class="t" id="tOut" x="30" y="44">15,5°</text>
+            <text class="lbl" x="30" y="196">wyrzutnia</text>
+            <text class="t" id="tExh" x="30" y="214">20,0°</text>
+            <text class="lbl" x="600" y="196" text-anchor="end">nawiew</text>
+            <text class="t" id="tSup" x="600" y="152" text-anchor="end">22,1°</text>
+            <text class="lbl" x="600" y="62" text-anchor="end">wywiew</text>
+            <text class="t" id="tIn" x="600" y="44" text-anchor="end">24,1°</text>
+          </svg>
+
+          <div class="readouts">
+            <div class="ro"><span class="k">Bieg</span><span class="v" id="roGear">III</span><span class="n" id="roGearN">program: II</span></div>
+            <div class="ro"><span class="k">Przepływ</span><span class="v" id="roFlow">386<small>m³/h</small></span><span class="n" id="roFlowN">wywiew 386</span></div>
+            <div class="ro" id="roFilterBox"><span class="k">Filtr</span><span class="v" id="roFilter">43<small>dni</small></span><span class="n" id="roFilterN">do wymiany</span></div>
+          </div>
+
+          <div class="override" id="override">
+            <span class="tag">wejście III</span>
+            <span>Bieg III wymusza wejście cyfrowe rekuperatora. Program na teraz mówi: bieg II.</span>
+          </div>
+
+          <div class="row-label">Moduły</div>
+          <div class="chips" id="modules"></div>
+
+          <div class="row-label">Funkcje czasowe</div>
+          <div class="chips" id="timed"></div>
+
+          <div class="now-line">
+            <span class="what" id="nowLine">Teraz w harmonogramie: <b>przedział 4 · 15:00–20:00 · II · 19°</b></span>
+            <button type="button" id="toSchedule">Harmonogram →</button>
+          </div>
+        </div>
+
+        <div class="ha-card" id="cardTile" aria-label="Wariant kompaktowy">
+          <div class="tile">
+            <div class="gear" id="tGear">III</div>
+            <div class="mid">
+              <span class="l1">Rekuperator</span>
+              <span class="l2" id="tLine">386 m³/h · nawiew 22,1° · odzysk 77%</span>
+            </div>
+            <div class="right"><b id="tFilter">43 dni</b>filtr</div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="sim">
+        <div class="ha-card">
+          <h3 class="cap">Symulacja stanów</h3>
+          <p>Te przyciski nie są częścią karty. Pokazują, jak karta reaguje na stany urządzenia.</p>
+        </div>
+        <div class="ha-card ctl">
+          <label for="simGear">Bieg (rejestr 2)</label>
+          <div class="seg" id="simGear" role="group" aria-label="Bieg">
+            <button type="button" data-v="0">0</button><button type="button" data-v="1">I</button><button type="button" data-v="2">II</button><button type="button" data-v="3">III</button>
+          </div>
+          <label>Wejście biegu III (rejestr 47)</label>
+          <div class="toggle-line"><button type="button" class="chip" id="simInput" aria-pressed="true"><span class="dot"></span>wymuszone</button></div>
+          <label for="simOut">Temperatura zewnętrzna: <span class="mono" id="simOutV">15,5°</span></label>
+          <input type="range" id="simOut" min="-15" max="32" step="0.5" value="15.5">
+          <label for="simFilter">Dni do wymiany filtra: <span class="mono" id="simFilterV">43</span></label>
+          <input type="range" id="simFilter" min="0" max="120" step="1" value="43">
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===================================================== HARMONOGRAM -->
+  <section class="block" id="harmonogram">
+    <div class="block-head">
+      <span class="eyebrow">karta 2</span>
+      <h2>Harmonogram</h2>
+      <p>Dzień to pięć przedziałów: od, do, bieg i temperatura. Oś doby pokazuje cały dzień naraz,
+        wysokość słupka to bieg, liczba nad nim to temperatura. Edycja w tabeli pod osią, z tymi
+        samymi regułami co integracja: kwadranse, kolejność, nic nie jest zaokrąglane.
+        Zmiany trafiają do urządzenia jednym wywołaniem <code class="mono">wanas.set_schedule</code>, także dla kilku dni naraz.</p>
+    </div>
+
+    <div class="stage">
+      <div class="ha-card" id="cardB">
+        <div class="card-title">
+          <h3 class="cap">Harmonogram</h3>
+          <span class="sub" id="bSub">odczyt: niedziela z urządzenia</span>
+        </div>
+        <div class="days" id="days" role="tablist" aria-label="Dzień tygodnia"></div>
+
+        <div class="timeline" id="timeline" aria-label="Oś doby">
+          <span class="tl-scale">bieg ▮ · temperatura °C</span>
+          <div class="tl-bars" id="tlBars"></div>
+          <div class="tl-now" id="tlNow" hidden></div>
+          <div class="tl-axis"><span style="left:0">00</span><span style="left:25%">06</span><span style="left:50%">12</span><span style="left:75%">18</span><span style="left:100%">24</span></div>
+        </div>
+
+        <div class="table-scroll">
+          <table class="periods" id="periods">
+            <thead><tr><th></th><th>od</th><th>do</th><th>bieg</th><th>temp.</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+        <div class="apply" id="apply"><span class="lab">Zastosuj też do:</span></div>
+        <div class="actions">
+          <button type="button" class="btn" id="undo" disabled>Cofnij zmiany</button>
+          <button type="button" class="btn primary" id="save" disabled>Zapisz</button>
+        </div>
+        <div class="toast" id="toast" aria-live="polite"></div>
+
+        <div class="row-label">Tydzień</div>
+        <div class="week" id="week"></div>
+      </div>
+
+      <aside class="sim">
+        <div class="ha-card">
+          <h3 class="cap">Wywołanie usługi</h3>
+          <p>Tak wygląda to, co karta wyśle po „Zapisz”. Aktualizuje się przy każdej zmianie.</p>
+        </div>
+        <pre class="call" id="call"></pre>
+        <div class="ha-card">
+          <h3 class="cap">Dane</h3>
+          <p>Niedziela to odczyt z urządzenia (rejestry 10–23 przy dniu programu = niedziela).
+            Pozostałe dni na prototypie to kopia niedzieli. Test z 02.10 pokazał ten sam program
+            dla przedziału 1 we wszystkich dniach; reszty nie odczytywałem. Karta czyta cały tydzień
+            przez <code class="mono">wanas.get_schedule</code>.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===================================================== RATIONALE -->
+  <section class="block" id="dlaczego">
+    <div class="block-head">
+      <span class="eyebrow">projekt</span>
+      <h2>Skąd ten kształt</h2>
+    </div>
+    <div class="notes">
+      <div class="ha-card note">
+        <h3>Co wziąłem, a czego nie</h3>
+        <ul>
+          <li><b>Schemat domu i kolor kanałów</b> jak w ha-ventilation-card: kanał ma barwę temperatury, która w nim płynie, a ruch tylko wtedy, gdy wentylator pracuje.</li>
+          <li><b>Bypass przekierowuje rysunek</b>, a nie tylko zapala ikonę: przy otwartym bypassie nawiew omija wymiennik.</li>
+          <li><b>Odzysk w środku wymiennika</b>, liczony z czterech temperatur: (nawiew − zewn.) / (wewn. − zewn.).</li>
+          <li><b>Bez tła HUD z obecnej karty Sci-Fi.</b> Karta z integracji musi wyglądać dobrze w każdym motywie; kolory biorę ze zmiennych motywu, więc w JrX wygląda jak reszta panelu.</li>
+          <li><b>Harmonogram jak tabela panelu</b>, nie siatka tygodnia z przeciąganiem (weekly-schedule-card): urządzenie ma zawsze dokładnie pięć przedziałów, więc przeciąganie dowolnych bloków obiecywałoby coś, czego rekuperator nie umie.</li>
+        </ul>
+      </div>
+      <div class="ha-card note">
+        <h3>Co karta mówi, czego dziś nie widać</h3>
+        <ul>
+          <li><b>Wymuszony bieg.</b> Na produkcji bieg III daje wejście cyfrowe (przekaźnik), a program chce II. Dziś to niewidoczne; karta pokazuje oba.</li>
+          <li><b>Co jest teraz w programie</b> i do której godziny, bez otwierania harmonogramu.</li>
+          <li><b>Filtr na bursztynowo</b> dopiero przy 7 dniach lub mniej. Wcześniej to zwykła liczba.</li>
+          <li><b>Zegar sterownika</b> tylko wtedy, gdy rozjeżdża się z HA o więcej niż 2 minuty; wtedy w nagłówku pojawia się „ustaw zegar”.</li>
+          <li><b>Funkcje czasowe z odliczaniem</b>: kominek 3 min, impreza 12 h, urlop 30 dni.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="podlaczenie">
+    <div class="block-head">
+      <span class="eyebrow">wdrożenie</span>
+      <h2>Jak to podłączyć</h2>
+      <p>Obie karty jako jeden plik JS w integracji, rejestrowany przez nią samą
+        (<code class="mono">frontend.add_extra_js_url</code>), tak jak robi to browser_mod. Jedna instalacja z HACS daje
+        integrację i karty, bez ręcznego dodawania zasobu. Edytor karty w UI: wybór urządzenia Wanas, reszta encji
+        znajduje się sama po unique_id.</p>
+    </div>
+    <div class="ha-card table-scroll">
+      <table class="map">
+        <thead><tr><th>Element karty</th><th>Źródło</th><th>Zmiana w integracji</th></tr></thead>
+        <tbody>
+          <tr><td>Cztery temperatury, kolor kanałów</td><td><code>sensor</code> outdoor / exhaust / supply / indoor (rejestry 4–7)</td><td></td></tr>
+          <tr><td>Bieg, wentylatory</td><td><code>sensor</code> supply_fan_speed (2), exhaust_fan_speed (3)</td><td></td></tr>
+          <tr><td>Przepływ</td><td><code>sensor</code> supply_airflow / exhaust_airflow (0, 1)</td><td></td></tr>
+          <tr><td>Wymuszony bieg</td><td><code>binary_sensor</code> input_speed_1 / input_speed_3 (46, 47)</td><td></td></tr>
+          <tr><td>Filtr</td><td><code>sensor</code> filter_replacement (36)</td><td></td></tr>
+          <tr><td>Moduły</td><td><code>switch</code> bypass, gwc, heater, cooler, humidifier + stany 30–34</td><td></td></tr>
+          <tr><td>Funkcje czasowe</td><td><code>switch</code> vacation / fireplace / party_switch, <code>number</code> 43–45 (odliczanie)</td><td></td></tr>
+          <tr><td>Odzysk</td><td>liczony w karcie z czterech temperatur</td><td></td></tr>
+          <tr><td>„Teraz w harmonogramie”</td><td>program dnia bieżącego</td><td class="new">nowy sensor „bieżący przedział”</td></tr>
+          <tr><td>Oś i tabela dnia</td><td><code>wanas.get_schedule</code> (cały tydzień)</td><td class="new">pamięć tygodnia w koordynatorze</td></tr>
+          <tr><td>Zapis</td><td><code>wanas.set_schedule</code> z <code>days</code> i <code>periods</code></td><td></td></tr>
+          <tr><td>Zegar sterownika</td><td><code>sensor</code> controller_clock, <code>button</code> sync_clock</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ha-card note">
+      <h3>Dlaczego dwie zmiany w integracji</h3>
+      <ul>
+        <li>Dziś integracja zna tylko dzień wybrany selektorem (rejestr 8). Żeby karta wiedziała, co jest <b>teraz</b>, integracja powinna raz na jakiś czas (start, zapis, co godzinę) odczytać tydzień i trzymać go w pamięci. Odczyt tygodnia to 7 zapisów rejestru 8, więc nie przy każdym otwarciu karty.</li>
+        <li>Z tej pamięci bierze się sensor bieżącego przedziału (stan: numer przedziału, atrybuty: od, do, bieg, temperatura) i dane dla karty harmonogramu bez dodatkowego ruchu na magistrali.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span>Inspiracje: <a href="https://github.com/MRDonnii/ha-ventilation-card" rel="noopener">MRDonnii/ha-ventilation-card</a> ·
+      <a href="https://github.com/Ralleberg/ha-hrv-card" rel="noopener">Ralleberg/ha-hrv-card</a> ·
+      <a href="https://github.com/arozoire/weekly-schedule-card" rel="noopener">arozoire/weekly-schedule-card</a> ·
+      tabela „Programy” z instrukcji Combo 430/630 (04.2026, rozdz. 3.2.1).</span>
+    <span>Prototyp: nic tu nie łączy się z Home Assistant.</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const fmtT = (v) => (Math.round(v * 10) / 10).toFixed(1).replace('.', ',') + '°';
+  const ROMAN = ['0', 'I', 'II', 'III'];
+
+  // ------------------------------------------------------------ state (prod 02.10 17:51)
+  const S = {
+    gear: 3, input3: true, out: 15.5, exh: 20.0, sup: 22.1, ind: 24.1,
+    flowS: 386, flowE: 386, filter: 43,
+    modules: { bypass: false, gwc: false, heater: false, cooler: false, humidifier: false },
+    timed: { fireplace: 0, party: 0, vacation: 0 },
+  };
+  const MODULES = [['bypass', 'Bypass'], ['gwc', 'GWC'], ['heater', 'Nagrzewnica'], ['cooler', 'Chłodnica'], ['humidifier', 'Nawilżacz']];
+  const TIMED = [['fireplace', 'Kominek', 180, 's'], ['party', 'Impreza', 720, 'min'], ['vacation', 'Urlop', 30, 'dni']];
+
+  // temperature -> colour on a cool..warm ramp shared by all four ducts
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const COOL = hex('#7cb3f9'), WARM = hex('#e7a59a');
+  const tColor = (t) => {
+    const k = Math.max(0, Math.min(1, (t + 5) / 30));
+    const c = COOL.map((v, i) => Math.round(lerp(v, WARM[i], k)));
+    return `rgb(${c.join(',')})`;
+  };
+
+  let simulated = false;  // start from the real readings; model only after a simulated change
+  function model() {
+    // a small physical model so the simulation stays plausible
+    if (!simulated) return;
+    const eff = S.modules.bypass ? 0.08 : 0.77;
+    S.sup = S.out + eff * (S.ind - S.out) + (S.modules.heater ? 4 : 0) - (S.modules.cooler ? 5 : 0);
+    S.exh = S.ind - eff * (S.ind - S.out);
+    const flows = [0, 100, 200, 400];
+    S.flowS = Math.round(flows[S.gear] * 0.965);
+    S.flowE = S.flowS;
+  }
+
+  function renderA() {
+    model();
+    $('#tOut').textContent = fmtT(S.out);
+    $('#tExh').textContent = fmtT(S.exh);
+    $('#tSup').textContent = fmtT(S.sup);
+    $('#tIn').textContent = fmtT(S.ind);
+    $('#gS0').setAttribute('stop-color', tColor(S.out));
+    $('#gS1').setAttribute('stop-color', tColor(S.sup));
+    $('#gE0').setAttribute('stop-color', tColor(S.ind));
+    $('#gE1').setAttribute('stop-color', tColor(S.exh));
+    const realEff = S.ind - S.out ? (S.sup - S.out) / (S.ind - S.out) : 0;
+    $('#tEff').textContent = S.modules.bypass ? 'bypass' : Math.round(Math.max(0, Math.min(1, realEff)) * 100) + '%';
+
+    const dur = [0, 3.2, 1.8, 0.9][S.gear];
+    for (const id of ['#dSupply', '#dExhaust']) {
+      const el = $(id);
+      el.style.animationDuration = dur ? dur + 's' : '0s';
+      el.style.opacity = S.gear ? 1 : 0;
+    }
+    for (const id of ['#fan1', '#fan2']) $(id).style.animationDuration = S.gear ? (dur * 0.6) + 's' : '0s';
+    $('#pBypass').setAttribute('opacity', S.modules.bypass ? 0.9 : 0);
+    $('#pSupply').style.opacity = S.modules.bypass ? 0.45 : 1;
+
+    $('#roGear').textContent = ROMAN[S.gear];
+    updateNow();
+    $('#roFlow').innerHTML = `${S.flowS}<small>m³/h</small>`;
+    $('#roFlowN').textContent = `wywiew ${S.flowE}`;
+    $('#roFilter').innerHTML = `${S.filter}<small>dni</small>`;
+    $('#roFilterN').textContent = S.filter <= 7 ? 'wymień filtr' : 'do wymiany';
+    $('#roFilterBox').classList.toggle('attn', S.filter <= 7);
+    $('#override').hidden = !(S.input3 && S.gear === 3);
+
+    $('#tGear').textContent = ROMAN[S.gear];
+    $('#tLine').textContent = `${S.flowS} m³/h · nawiew ${fmtT(S.sup)} · ${S.modules.bypass ? 'bypass' : 'odzysk ' + Math.round(Math.max(0, Math.min(1, realEff)) * 100) + '%'}`;
+    $('#tFilter').textContent = `${S.filter} dni`;
+    $('#tFilter').style.color = S.filter <= 7 ? 'var(--amber)' : '';
+
+    for (const b of document.querySelectorAll('#simGear button')) b.setAttribute('aria-pressed', String(+b.dataset.v === S.gear));
+    renderChips();
+  }
+
+  function renderChips() {
+    const m = $('#modules'); m.textContent = '';
+    for (const [k, label] of MODULES) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', String(S.modules[k]));
+      b.innerHTML = `<span class="dot"></span>${label}`;
+      b.onclick = () => { S.modules[k] = !S.modules[k]; simulated = true; renderA(); };
+      m.append(b);
+    }
+    const t = $('#timed'); t.textContent = '';
+    for (const [k, label, max, unit] of TIMED) {
+      const on = S.timed[k] > 0;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', String(on));
+      const left = unit === 's' ? `${Math.floor(S.timed[k] / 60)}:${String(S.timed[k] % 60).padStart(2, '0')}` : `${S.timed[k]} ${unit}`;
+      b.innerHTML = `<span class="dot"></span>${label}${on ? ` <span class="cd">${left}</span>` : ` <span class="cd" style="color:var(--ink-faint)">${max} ${unit}</span>`}`;
+      b.onclick = () => { S.timed[k] = on ? 0 : max; renderChips(); };
+      t.append(b);
+    }
+  }
+  setInterval(() => {
+    let changed = false;
+    if (S.timed.fireplace > 0) { S.timed.fireplace -= 1; changed = true; }
+    if (changed) renderChips();
+  }, 1000);
+
+  for (const b of document.querySelectorAll('#simGear button')) b.onclick = () => { S.gear = +b.dataset.v; simulated = true; renderA(); };
+  $('#simInput').onclick = (e) => { S.input3 = !S.input3; e.currentTarget.setAttribute('aria-pressed', String(S.input3)); if (S.input3) S.gear = 3; simulated = true; renderA(); };
+  $('#simOut').oninput = (e) => { S.out = +e.target.value; $('#simOutV').textContent = fmtT(S.out); simulated = true; renderA(); };
+  $('#simFilter').oninput = (e) => { S.filter = +e.target.value; $('#simFilterV').textContent = S.filter; renderA(); };
+  $('#toSchedule').onclick = () => document.getElementById('harmonogram').scrollIntoView({ behavior: 'smooth' });
+
+  // ------------------------------------------------------------ schedule
+  const DAYS = [['pon', 'poniedziałek', 'monday'], ['wt', 'wtorek', 'tuesday'], ['śr', 'środa', 'wednesday'], ['czw', 'czwartek', 'thursday'], ['pt', 'piątek', 'friday'], ['sob', 'sobota', 'saturday'], ['nie', 'niedziela', 'sunday']];
+  // Sunday as read from the unit on 02.10: ends 300/600/900/1200, speeds 2, temps 20/21/19/19/20
+  const SUNDAY = { until: [300, 600, 900, 1200], speed: [2, 2, 2, 2, 2], temp: [20, 21, 19, 19, 20] };
+  const clone = (d) => JSON.parse(JSON.stringify(d));
+  const saved = DAYS.map(() => clone(SUNDAY));
+  let work = saved.map(clone);
+  const now = new Date();
+  const todayIdx = (now.getDay() + 6) % 7;
+  let day = todayIdx, sel = 0;
+  const also = new Set();
+
+  const hm = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  const bounds = (d, i) => [i === 0 ? 0 : d.until[i - 1], i === 4 ? 1440 : d.until[i]];
+  const dirty = (i) => JSON.stringify(work[i]) !== JSON.stringify(saved[i]);
+  const speedColor = (s) => ['rgba(255,255,255,0.18)', 'rgba(124,179,249,0.45)', 'rgba(124,179,249,0.72)', 'rgba(124,179,249,1)'][s];
+
+  function currentPeriod(d) {
+    const m = now.getHours() * 60 + now.getMinutes();
+    for (let i = 0; i < 5; i++) { const [a, b] = bounds(d, i); if (m >= a && m < b) return i; }
+    return 4;
+  }
+
+  function renderDays() {
+    const el = $('#days'); el.textContent = '';
+    DAYS.forEach(([short, long], i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'day' + (dirty(i) ? ' dirty' : ''); b.role = 'tab';
+      b.setAttribute('aria-selected', String(i === day)); b.title = long;
+      b.innerHTML = short + (i === todayIdx ? '<span class="today" title="dziś"></span>' : '');
+      b.onclick = () => { day = i; sel = 0; also.clear(); $('#msg').textContent = ''; renderB(); };
+      el.append(b);
+    });
+  }
+
+  function renderTimeline() {
+    const d = work[day], bars = $('#tlBars'); bars.textContent = '';
+    for (let i = 0; i < 5; i++) {
+      const [a, b] = bounds(d, i);
+      const seg = document.createElement('div');
+      seg.className = 'tl-seg' + (i === sel ? ' sel' : '');
+      seg.style.width = ((b - a) / 1440 * 100) + '%';
+      const h = [8, 34, 64, 100][d.speed[i]];
+      seg.innerHTML = `<span class="temp" style="bottom:calc(${h}% + 3px)">${d.temp[i]}°</span><div class="bar" style="height:${h}%; background:${speedColor(d.speed[i])}"></div>`;
+      seg.title = `przedział ${i + 1}: ${hm(a)}–${hm(b)}, bieg ${ROMAN[d.speed[i]]}, ${d.temp[i]}°`;
+      seg.onclick = () => { sel = i; renderB(); };
+      bars.append(seg);
+    }
+    const nowEl = $('#tlNow');
+    nowEl.hidden = day !== todayIdx;
+    nowEl.style.left = ((now.getHours() * 60 + now.getMinutes()) / 1440 * 100) + '%';
+  }
+
+  function setMsg(t) { $('#msg').textContent = t; }
+
+  function tryUntil(i, delta) {
+    const d = work[day];
+    const next = d.until[i] + delta;
+    const lo = i === 0 ? 0 : d.until[i - 1], hi = i === 3 ? 1440 : d.until[i + 1];
+    if (next < 15 || next > 1425) { setMsg(`Przedział ${i + 1}: ${hm(next)} jest poza 00:15–23:45.`); return; }
+    if (next <= lo) { setMsg(`Przedział ${i + 1} nie może kończyć się o ${hm(next)}: przedział ${i} kończy się o ${hm(lo)}.`); return; }
+    if (next >= hi) { setMsg(`Przedział ${i + 1} nie może kończyć się o ${hm(next)}: przedział ${i + 2} kończy się o ${hm(hi)}.`); return; }
+    setMsg(''); d.until[i] = next; sel = i; renderB();
+  }
+
+  function renderTable() {
+    const d = work[day], tb = $('#periods tbody'); tb.textContent = '';
+    for (let i = 0; i < 5; i++) {
+      const [a, b] = bounds(d, i);
+      const tr = document.createElement('tr'); if (i === sel) tr.className = 'sel';
+      const untilCell = i < 4
+        ? `<span class="step"><button type="button" aria-label="Przedział ${i + 1} kończy się 15 minut wcześniej" data-a="u-" data-i="${i}">−</button><span class="time">${hm(b)}</span><button type="button" aria-label="Przedział ${i + 1} kończy się 15 minut później" data-a="u+" data-i="${i}">+</button></span>`
+        : `<span class="time fixed">00:00</span>`;
+      const speedCell = `<span class="seg small" role="group" aria-label="Bieg przedziału ${i + 1}">${[0, 1, 2, 3].map((s) => `<button type="button" data-a="s" data-i="${i}" data-v="${s}" aria-pressed="${d.speed[i] === s}">${ROMAN[s]}</button>`).join('')}</span>`;
+      const tempCell = `<span class="step"><button type="button" aria-label="Temperatura przedziału ${i + 1} niżej" data-a="t-" data-i="${i}" ${d.temp[i] <= 10 ? 'disabled' : ''}>−</button><span class="val">${d.temp[i]}°</span><button type="button" aria-label="Temperatura przedziału ${i + 1} wyżej" data-a="t+" data-i="${i}" ${d.temp[i] >= 30 ? 'disabled' : ''}>+</button></span>`;
+      tr.innerHTML = `<td class="n">${i + 1}</td><td><span class="time ${i === 0 ? 'fixed' : ''}">${hm(a)}</span></td><td>${untilCell}</td><td>${speedCell}</td><td>${tempCell}</td>`;
+      tb.append(tr);
+    }
+  }
+  $('#periods').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const i = +b.dataset.i, d = work[day];
+    switch (b.dataset.a) {
+      case 'u-': return tryUntil(i, -15);
+      case 'u+': return tryUntil(i, 15);
+      case 's': d.speed[i] = +b.dataset.v; break;
+      case 't-': d.temp[i] = Math.max(10, d.temp[i] - 1); break;
+      case 't+': d.temp[i] = Math.min(30, d.temp[i] + 1); break;
+    }
+    sel = i; setMsg(''); renderB();
+  });
+
+  function renderApply() {
+    const el = $('#apply'); el.querySelectorAll('.mini').forEach((n) => n.remove());
+    DAYS.forEach(([short, long], i) => {
+      if (i === day) return;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'mini'; b.textContent = short; b.title = long;
+      b.setAttribute('aria-pressed', String(also.has(i)));
+      b.onclick = () => { also.has(i) ? also.delete(i) : also.add(i); renderB(); };
+      el.append(b);
+    });
+  }
+
+  function renderWeek() {
+    const el = $('#week'); el.textContent = '';
+    DAYS.forEach(([short], i) => {
+      const d = work[i];
+      const row = document.createElement('div'); row.className = 'wk' + (i === day ? ' on' : '');
+      const parts = [0, 1, 2, 3, 4].map((p) => { const [a, b] = bounds(d, p); return `<i style="width:${(b - a) / 1440 * 100}%; background:${speedColor(d.speed[p])}; border-right:1px solid rgba(0,0,20,0.6)"></i>`; }).join('');
+      row.innerHTML = `<span class="d">${short}</span><span class="s">${parts}</span>`;
+      row.onclick = () => { day = i; sel = 0; also.clear(); setMsg(''); renderB(); };
+      el.append(row);
+    });
+  }
+
+  function targets() { return [day, ...[...also].sort((a, b) => a - b)]; }
+
+  function renderCall() {
+    const d = work[day];
+    const rows = [0, 1, 2, 3, 4].map((i) => i < 4
+      ? `    - {until: "${hm(d.until[i])}", speed: ${d.speed[i]}, temperature: ${d.temp[i]}}`
+      : `    - {speed: ${d.speed[i]}, temperature: ${d.temp[i]}}`).join('\n');
+    $('#call').textContent = `action: wanas.set_schedule\ndata:\n  days: [${targets().map((i) => DAYS[i][2]).join(', ')}]\n  periods:\n${rows}`;
+  }
+
+  function renderB() {
+    renderDays(); renderTimeline(); renderTable(); renderApply(); renderWeek(); renderCall();
+    const changed = dirty(day) || also.size > 0;
+    $('#save').disabled = !changed;
+    $('#undo').disabled = !dirty(day);
+    $('#save').textContent = also.size ? `Zapisz ${also.size + 1} dni` : `Zapisz ${DAYS[day][1]}`;
+    $('#bSub').textContent = day === 6 ? 'odczyt: niedziela z urządzenia' : `${DAYS[day][1]} · prototyp: kopia niedzieli`;
+    updateNow();
+  }
+
+  // card 1's "now" line and gear note follow today's program in card 2
+  function updateNow() {
+    const td = work[todayIdx], p = currentPeriod(td), [a, b] = bounds(td, p);
+    const prog = ROMAN[td.speed[p]];
+    $('#nowLine').innerHTML = `Teraz w harmonogramie: <b>przedział ${p + 1} · ${hm(a)}–${hm(b)} · ${prog} · ${td.temp[p]}°</b>`;
+    $('#roGearN').textContent = (S.input3 && S.gear === 3 ? 'wejście III · ' : '') + `program: ${prog}`;
+    $('#override').lastElementChild.textContent = `Bieg III wymusza wejście cyfrowe rekuperatora. Program na teraz mówi: bieg ${prog}.`;
+  }
+
+  $('#undo').onclick = () => { work[day] = clone(saved[day]); setMsg(''); renderB(); };
+  $('#save').onclick = () => {
+    const t = targets();
+    for (const i of t) { work[i] = clone(work[day]); saved[i] = clone(work[day]); }
+    also.clear();
+    $('#toast').textContent = `Zapisano: ${t.map((i) => DAYS[i][1]).join(', ')} (wanas.set_schedule)`;
+    setTimeout(() => { $('#toast').textContent = ''; }, 4000);
+    renderB();
+  };
+
+  renderA();
+  renderB();
+})();
+</script>

@@ -13,7 +13,11 @@
       "filter_replacement": { "default": "mdi:air-filter" },
       "system_errors": { "default": "mdi:alert-circle-outline" },
       "controller_clock": { "default": "mdi:clock-outline" },
-      "schedule_summary": { "default": "mdi:calendar-clock" }
+      "schedule_summary": { "default": "mdi:calendar-clock" },
+      "current_period": { "default": "mdi:timeline-clock-outline" },
+      "heat_recovery_power": { "default": "mdi:heat-wave" },
+      "heat_recovery_efficiency": { "default": "mdi:percent-circle-outline" },
+      "heat_recovery_energy": { "default": "mdi:sun-thermometer-outline" }
     },
     "binary_sensor": {
       "gwc_state": { "default": "mdi:heat-wave" },

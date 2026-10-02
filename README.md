@@ -99,7 +99,7 @@ This is useful for custom firmware or alternative Wanas device variants.
 
 ## Entities
 
-55 entities on a fully equipped unit without maxiCONTROL: 13 sensors, 10 binary sensors,
+59 entities on a fully equipped unit without maxiCONTROL: 17 sensors, 10 binary sensors,
 8 switches, 18 numbers, 4 times, 1 select and 1 button. Names are translated, so the Polish column is
 what a Polish instance displays.
 
@@ -119,6 +119,7 @@ what a Polish instance displays.
 | 36 | Filter replacement | Wymiana filtra |
 | 37 | System errors | Błędy systemu |
 | 50, 51 | Controller clock | Zegar sterownika |
+| 0, 4, 6, 7 | Heat recovery power, efficiency, recovered energy | Moc odzysku ciepła, Sprawność odzysku ciepła, Energia odzyskana |
 | 55 | Room humidity (maxiCONTROL) | Wilgotność w pokoju |
 | 56 | Bathroom 1 humidity (maxiCONTROL) | Wilgotność w łazience 1 |
 | 57 | Bathroom 2 humidity (maxiCONTROL) | Wilgotność w łazience 2 |
@@ -128,6 +129,29 @@ what a Polish instance displays.
 
 Registers 55 to 57 and 65 to 67 come from a user's working Modbus setup (issue #1); the
 manufacturer table in `config/hardware/` ends at register 54.
+
+### Heat recovery
+
+Three sensors computed from readings the integration already polls, with no extra bus
+traffic:
+
+- **Heat recovery power** (W): `0.335 × supply airflow [m³/h] × (supply − outdoor) [K]`,
+  where 0.335 is air density 1.2 kg/m³ times specific heat 1005 J/(kg·K) per hour.
+  When the outdoor air is warmer than the room, the core recovers cooling instead: the
+  power stays positive and the `mode` attribute says `cooling`. Supply air warmer than a
+  warm outdoor is fan heat and counts as 0.
+- **Heat recovery efficiency** (%): `(supply − outdoor) / (room − outdoor)`, the supply-side
+  temperature ratio of EN 308. Unknown when room and outdoor differ by less than 2 K.
+- **Recovered energy** (kWh, `total_increasing`): the power integrated on every poll, kept
+  across restarts. Usable in the Energy dashboard and long-term statistics.
+
+With the bypass open, or the heater, cooler or ground loop (GWC) running, the supply
+temperature no longer measures the core alone: power and efficiency go unknown and nothing
+is added to the energy. A sensor fault (63066, read as -247 °C) does the same.
+
+The supply side also picks up the supply fan's motor heat, so it reads higher than the
+extract side. The power sensor carries the extract-side figure in `extract_side_power`;
+on a Combo 430 at 396 m³/h, 15.4 °C outside and 24.1 °C inside the two were 822 W and 547 W.
 
 ### Binary sensors
 
@@ -255,6 +279,43 @@ match the unit. The clock drifts by a few minutes, and the weekly schedule runs 
 The DTR also lists registers 72 (manual fan speed), 73 (manual temperature setpoint) and 74
 (software version). The Combo 430 this was developed on answers all three with a Modbus
 error, so they are not exposed.
+
+## Dashboard cards
+
+The integration ships two Lovelace cards and registers them itself, so there is no
+resource to add: after installing or updating, reload the browser and pick them in the
+card picker, or add them in YAML:
+
+```yaml
+type: custom:wanas-card            # airflow diagram, temperatures, speed, filter, modules
+type: custom:wanas-card
+compact: true                      # one-row tile
+type: custom:wanas-schedule-card   # five periods per day, as on the unit's panel
+```
+
+- **wanas-card** draws the airflow through the unit: duct colours follow the air
+  temperature, the dashes move at the fan speed, an open bypass reroutes the supply past
+  the core, and the core shows the recovery efficiency and power. Below: speed (with
+  a note when a digital input forces it against the schedule), airflow, recovered power
+  with today's recovered energy (from recorder statistics), filter days (amber
+  at 7 or fewer), the fitted modules, the timed functions with their countdown, and the
+  period the schedule is in now. The controller clock is only mentioned when it drifts by
+  more than two minutes, with a button to set it.
+- **wanas-schedule-card** shows one day as a 24-hour timeline (bar height is the fan
+  speed, the number above is the temperature) and a table of the five periods. Edits follow
+  the same rules as the `time` entities; one save can write several days.
+- Both find their entities through the entity registry, so renamed entity ids keep
+  working. With more than one unit, add `device_id: <id>`.
+- Colours come from the theme (`--primary-color`, `--warning-color`, `--divider-color`...).
+
+The integration keeps a copy of the whole week in memory: read at start-up and every day
+at 03:17, updated by every poll for the selected day and by every schedule write.
+`wanas.get_schedule` answers from it; pass `refresh: true` to read the unit again. A week
+read writes the day selector seven times, which is why it is not done on every poll.
+The **Current schedule period** sensor (state 1-5, attributes `from`, `until`, `speed`,
+`temperature`, `day`) comes from the same copy.
+
+A static prototype of both cards is in `docs/cards-prototype.html`.
 
 ## Requirements
 

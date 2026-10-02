@@ -366,6 +366,11 @@ keys as `strings.json`. The `entity` block carries all 34 entity names.
 - Confirm Slave ID matches device configuration
 - Try switching protocol (some devices prefer plain TCP over RTU)
 
+**Readings stop updating**
+- No bus call may take longer than 30 s: a call that never returns is abandoned, the socket
+  is closed and the next poll reconnects. After three failed polls in a row the connection
+  is also opened afresh. Diagnostics show `failed_polls_in_a_row` and `last_poll_success`.
+
 **Sensors show "Unknown"**
 - The device may not support all registers — this is normal for some variants
 - In Advanced Mode, you can remap registers to match your device

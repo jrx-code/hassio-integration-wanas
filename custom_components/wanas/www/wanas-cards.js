@@ -14,7 +14,7 @@
  * restart the airflow animation each time.
  */
 
-const VERSION = "3.3.0";
+const VERSION = "3.3.1";
 const ROMAN = ["0", "I", "II", "III"];
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 

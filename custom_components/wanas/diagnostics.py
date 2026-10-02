@@ -72,6 +72,12 @@ async def async_get_config_entry_diagnostics(
                 {"start": start, "count": count} for start, count in coordinator.read_blocks
             ],
             "last_update_success": coordinator.last_update_success,
+            "failed_polls_in_a_row": coordinator.failed_polls,
+            "last_poll_success": (
+                coordinator.last_poll_success.isoformat()
+                if coordinator.last_poll_success
+                else None
+            ),
         },
         "features": coordinator.features,
         "registers": (

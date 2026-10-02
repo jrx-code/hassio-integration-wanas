@@ -158,3 +158,63 @@ async def test_maxicontrol_registers_follow_the_module(
     assert not fitted or all(count <= 16 for _, count in blocks)
     if not fitted:
         assert not panel & covered
+
+
+async def test_a_call_that_never_returns_releases_the_bus(
+    hass: HomeAssistant, config_entry, mock_client, monkeypatch
+) -> None:
+    """A hung read times out, drops the socket and lets the next write through.
+
+    Without the deadline the lock stays held and every later exchange waits forever,
+    which is how the core modbus hub froze on the real unit.
+    """
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = config_entry.runtime_data
+    monkeypatch.setattr("custom_components.wanas.coordinator.BUS_TIMEOUT", 0.05)
+
+    async def hang(*args, **kwargs):
+        await asyncio.Event().wait()
+
+    healthy = mock_client.read_holding_registers.side_effect
+    mock_client.read_holding_registers.side_effect = hang
+    mock_client.close.reset_mock()
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success is False
+    mock_client.close.assert_called()
+
+    mock_client.read_holding_registers.side_effect = healthy
+    await asyncio.wait_for(coordinator.async_write_register(39, 1), 1)
+    mock_client.write_register.assert_awaited()
+
+
+async def test_repeated_failed_polls_start_a_new_connection(
+    hass: HomeAssistant, config_entry, mock_client
+) -> None:
+    """Error responses keep the socket, but not for more than three polls in a row."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = config_entry.runtime_data
+    assert coordinator.failed_polls == 0
+    assert coordinator.last_poll_success is not None
+
+    healthy = mock_client.read_holding_registers.side_effect
+    refused = MagicMock()
+    refused.isError.return_value = True
+    mock_client.read_holding_registers.side_effect = None
+    mock_client.read_holding_registers.return_value = refused
+    mock_client.close.reset_mock()
+
+    for _ in range(2):
+        await coordinator.async_refresh()
+    mock_client.close.assert_not_called()
+    await coordinator.async_refresh()
+    assert coordinator.failed_polls == 3
+    mock_client.close.assert_called_once()
+
+    mock_client.read_holding_registers.side_effect = healthy
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success is True
+    assert coordinator.failed_polls == 0

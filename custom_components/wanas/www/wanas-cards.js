@@ -656,8 +656,18 @@ class WanasScheduleCard extends HTMLElement {
   }
 }
 
-if (!customElements.get("wanas-card")) customElements.define("wanas-card", WanasCard);
-if (!customElements.get("wanas-schedule-card")) customElements.define("wanas-schedule-card", WanasScheduleCard);
+// Home Assistant's app bundle replaces window.customElements with a scoped-registry
+// polyfill, and this module (add_extra_js_url) loads in parallel with it. Defined before
+// the swap, the cards land in the native registry the polyfill does not consult, and
+// Lovelace shows "Configuration error" on some page loads. <home-assistant> is defined
+// after the polyfill is in place, so wait for it and define on whatever registry is
+// current then.
+function defineCards() {
+  const registry = window.customElements;
+  if (!registry.get("wanas-card")) registry.define("wanas-card", WanasCard);
+  if (!registry.get("wanas-schedule-card")) registry.define("wanas-schedule-card", WanasScheduleCard);
+}
+window.customElements.whenDefined("home-assistant").then(defineCards);
 
 window.customCards = window.customCards || [];
 if (!window.customCards.some((c) => c.type === "wanas-card")) {

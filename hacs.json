@@ -1,5 +1,5 @@
 {
-  "name": "Wanas Rekuperator",
+  "name": "hassio-integration-wanas",
   "render_readme": true,
   "homeassistant": "2024.7.0"
 }

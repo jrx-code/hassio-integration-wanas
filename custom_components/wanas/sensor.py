@@ -16,11 +16,16 @@ from .clock import decode_clock
 from .const import (
     CLOCK_DATE_ADDRESS,
     CLOCK_TIME_ADDRESS,
+    SCHEDULE_DAY_ADDRESS,
+    SCHEDULE_DAYS,
+    SCHEDULE_FIRST_ADDRESS,
+    SCHEDULE_REGISTER_COUNT,
     SENSOR_DESCRIPTIONS,
     WanasSensorDescription,
 )
 from .coordinator import WanasCoordinator
 from .entity import device_info, device_key
+from .schedule import day_periods, summary
 
 # Read-only, values come from the coordinator.
 PARALLEL_UPDATES = 0
@@ -39,6 +44,7 @@ async def async_setup_entry(
         if coordinator.has_feature(desc.feature)
     ]
     entities.append(WanasClockSensor(coordinator, entry))
+    entities.append(WanasScheduleSensor(coordinator, entry))
     async_add_entities(entities)
 
 
@@ -115,3 +121,46 @@ class WanasClockSensor(CoordinatorEntity[WanasCoordinator], SensorEntity):
             data[CLOCK_TIME_ADDRESS],
             dt_util.get_default_time_zone(),
         )
+
+
+class WanasScheduleSensor(CoordinatorEntity[WanasCoordinator], SensorEntity):
+    """The selected schedule day in one line, the way the panel's table reads.
+
+    State: '00:00-06:00 I 18° | 06:00-07:00 II 20° | ...'. Attributes carry the day and
+    the five periods with from, until, speed and temperature.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "schedule_summary"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: WanasCoordinator, entry: ConfigEntry) -> None:
+        """Initialize the schedule sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{device_key(entry)}_schedule_summary"
+        self._attr_device_info = device_info(entry)
+
+    def _periods(self) -> list[dict] | None:
+        data = self.coordinator.data
+        addresses = range(SCHEDULE_FIRST_ADDRESS, SCHEDULE_FIRST_ADDRESS + SCHEDULE_REGISTER_COUNT)
+        if not data or any(address not in data for address in addresses):
+            return None
+        return day_periods([data[address] for address in addresses])
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the summary line."""
+        periods = self._periods()
+        return summary(periods) if periods else None
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        """Return the selected day and its periods."""
+        periods = self._periods()
+        if not periods:
+            return None
+        day = (self.coordinator.data or {}).get(SCHEDULE_DAY_ADDRESS)
+        return {
+            "day": SCHEDULE_DAYS[day] if day is not None and 0 <= day < 7 else None,
+            "periods": periods,
+        }

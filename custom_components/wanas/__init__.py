@@ -14,6 +14,7 @@ from .const import (
     BINARY_SENSOR_DESCRIPTIONS,
     DOMAIN,
     NUMBER_DESCRIPTIONS,
+    RETIRED_ENTITIES,
     SENSOR_DESCRIPTIONS,
     SWITCH_DESCRIPTIONS,
 )
@@ -28,6 +29,7 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -59,6 +61,18 @@ def _purge_absent_modules(hass: HomeAssistant, entry: WanasConfigEntry) -> None:
     for reg_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
         if reg_entry.unique_id in absent:
             registry.async_remove(reg_entry.entity_id)
+
+
+def _purge_retired_entities(hass: HomeAssistant, entry: WanasConfigEntry) -> None:
+    """Drop registry entries of entities an earlier release created and this one does not.
+
+    Left alone they would sit in the registry as permanently unavailable.
+    """
+    registry = er.async_get(hass)
+    for platform, key in RETIRED_ENTITIES:
+        entity_id = registry.async_get_entity_id(platform, DOMAIN, f"{device_key(entry)}_{key}")
+        if entity_id:
+            registry.async_remove(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -112,6 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WanasConfigEntry) -> boo
 
     entry.runtime_data = coordinator
     _purge_absent_modules(hass, entry)
+    _purge_retired_entities(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))

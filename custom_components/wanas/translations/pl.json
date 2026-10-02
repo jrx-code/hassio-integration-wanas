@@ -122,48 +122,36 @@
               "party_name": "Funkcja impreza (nazwa)",
               "party_write_address": "Funkcja impreza (adres zapisu)",
               "party_verify_address": "Funkcja impreza (adres weryfikacji)",
-              "zone_1_end_name": "Koniec strefy 1 (nazwa)",
-              "zone_1_end_write_address": "Koniec strefy 1 (adres zapisu)",
-              "zone_1_end_verify_address": "Koniec strefy 1 (adres weryfikacji)",
-              "zone_2_end_name": "Koniec strefy 2 (nazwa)",
-              "zone_2_end_write_address": "Koniec strefy 2 (adres zapisu)",
-              "zone_2_end_verify_address": "Koniec strefy 2 (adres weryfikacji)",
-              "zone_3_end_name": "Koniec strefy 3 (nazwa)",
-              "zone_3_end_write_address": "Koniec strefy 3 (adres zapisu)",
-              "zone_3_end_verify_address": "Koniec strefy 3 (adres weryfikacji)",
-              "zone_4_end_name": "Koniec strefy 4 (nazwa)",
-              "zone_4_end_write_address": "Koniec strefy 4 (adres zapisu)",
-              "zone_4_end_verify_address": "Koniec strefy 4 (adres weryfikacji)",
-              "zone_1_speed_name": "Bieg strefy 1 (nazwa)",
-              "zone_1_speed_write_address": "Bieg strefy 1 (adres zapisu)",
-              "zone_1_speed_verify_address": "Bieg strefy 1 (adres weryfikacji)",
-              "zone_2_speed_name": "Bieg strefy 2 (nazwa)",
-              "zone_2_speed_write_address": "Bieg strefy 2 (adres zapisu)",
-              "zone_2_speed_verify_address": "Bieg strefy 2 (adres weryfikacji)",
-              "zone_3_speed_name": "Bieg strefy 3 (nazwa)",
-              "zone_3_speed_write_address": "Bieg strefy 3 (adres zapisu)",
-              "zone_3_speed_verify_address": "Bieg strefy 3 (adres weryfikacji)",
-              "zone_4_speed_name": "Bieg strefy 4 (nazwa)",
-              "zone_4_speed_write_address": "Bieg strefy 4 (adres zapisu)",
-              "zone_4_speed_verify_address": "Bieg strefy 4 (adres weryfikacji)",
-              "zone_5_speed_name": "Bieg strefy 5 (nazwa)",
-              "zone_5_speed_write_address": "Bieg strefy 5 (adres zapisu)",
-              "zone_5_speed_verify_address": "Bieg strefy 5 (adres weryfikacji)",
-              "zone_1_temperature_name": "Temperatura strefy 1 (nazwa)",
-              "zone_1_temperature_write_address": "Temperatura strefy 1 (adres zapisu)",
-              "zone_1_temperature_verify_address": "Temperatura strefy 1 (adres weryfikacji)",
-              "zone_2_temperature_name": "Temperatura strefy 2 (nazwa)",
-              "zone_2_temperature_write_address": "Temperatura strefy 2 (adres zapisu)",
-              "zone_2_temperature_verify_address": "Temperatura strefy 2 (adres weryfikacji)",
-              "zone_3_temperature_name": "Temperatura strefy 3 (nazwa)",
-              "zone_3_temperature_write_address": "Temperatura strefy 3 (adres zapisu)",
-              "zone_3_temperature_verify_address": "Temperatura strefy 3 (adres weryfikacji)",
-              "zone_4_temperature_name": "Temperatura strefy 4 (nazwa)",
-              "zone_4_temperature_write_address": "Temperatura strefy 4 (adres zapisu)",
-              "zone_4_temperature_verify_address": "Temperatura strefy 4 (adres weryfikacji)",
-              "zone_5_temperature_name": "Temperatura strefy 5 (nazwa)",
-              "zone_5_temperature_write_address": "Temperatura strefy 5 (adres zapisu)",
-              "zone_5_temperature_verify_address": "Temperatura strefy 5 (adres weryfikacji)",
+              "zone_1_speed_name": "Przedział 1: bieg (nazwa)",
+              "zone_1_speed_write_address": "Przedział 1: bieg (adres zapisu)",
+              "zone_1_speed_verify_address": "Przedział 1: bieg (adres weryfikacji)",
+              "zone_2_speed_name": "Przedział 2: bieg (nazwa)",
+              "zone_2_speed_write_address": "Przedział 2: bieg (adres zapisu)",
+              "zone_2_speed_verify_address": "Przedział 2: bieg (adres weryfikacji)",
+              "zone_3_speed_name": "Przedział 3: bieg (nazwa)",
+              "zone_3_speed_write_address": "Przedział 3: bieg (adres zapisu)",
+              "zone_3_speed_verify_address": "Przedział 3: bieg (adres weryfikacji)",
+              "zone_4_speed_name": "Przedział 4: bieg (nazwa)",
+              "zone_4_speed_write_address": "Przedział 4: bieg (adres zapisu)",
+              "zone_4_speed_verify_address": "Przedział 4: bieg (adres weryfikacji)",
+              "zone_5_speed_name": "Przedział 5: bieg (nazwa)",
+              "zone_5_speed_write_address": "Przedział 5: bieg (adres zapisu)",
+              "zone_5_speed_verify_address": "Przedział 5: bieg (adres weryfikacji)",
+              "zone_1_temperature_name": "Przedział 1: temperatura (nazwa)",
+              "zone_1_temperature_write_address": "Przedział 1: temperatura (adres zapisu)",
+              "zone_1_temperature_verify_address": "Przedział 1: temperatura (adres weryfikacji)",
+              "zone_2_temperature_name": "Przedział 2: temperatura (nazwa)",
+              "zone_2_temperature_write_address": "Przedział 2: temperatura (adres zapisu)",
+              "zone_2_temperature_verify_address": "Przedział 2: temperatura (adres weryfikacji)",
+              "zone_3_temperature_name": "Przedział 3: temperatura (nazwa)",
+              "zone_3_temperature_write_address": "Przedział 3: temperatura (adres zapisu)",
+              "zone_3_temperature_verify_address": "Przedział 3: temperatura (adres weryfikacji)",
+              "zone_4_temperature_name": "Przedział 4: temperatura (nazwa)",
+              "zone_4_temperature_write_address": "Przedział 4: temperatura (adres zapisu)",
+              "zone_4_temperature_verify_address": "Przedział 4: temperatura (adres weryfikacji)",
+              "zone_5_temperature_name": "Przedział 5: temperatura (nazwa)",
+              "zone_5_temperature_write_address": "Przedział 5: temperatura (adres zapisu)",
+              "zone_5_temperature_verify_address": "Przedział 5: temperatura (adres weryfikacji)",
               "fan_power_1_name": "Moc biegu 1 (nazwa)",
               "fan_power_1_write_address": "Moc biegu 1 (adres zapisu)",
               "fan_power_1_verify_address": "Moc biegu 1 (adres weryfikacji)",
@@ -240,6 +228,9 @@
       },
       "controller_clock": {
         "name": "Zegar sterownika"
+      },
+      "schedule_summary": {
+        "name": "Harmonogram (wybrany dzień)"
       }
     },
     "binary_sensor": {
@@ -316,47 +307,35 @@
       "party": {
         "name": "Funkcja impreza"
       },
-      "zone_1_end": {
-        "name": "Koniec strefy 1"
-      },
-      "zone_2_end": {
-        "name": "Koniec strefy 2"
-      },
-      "zone_3_end": {
-        "name": "Koniec strefy 3"
-      },
-      "zone_4_end": {
-        "name": "Koniec strefy 4"
-      },
       "zone_1_speed": {
-        "name": "Bieg strefy 1"
+        "name": "Przedział 1: bieg"
       },
       "zone_2_speed": {
-        "name": "Bieg strefy 2"
+        "name": "Przedział 2: bieg"
       },
       "zone_3_speed": {
-        "name": "Bieg strefy 3"
+        "name": "Przedział 3: bieg"
       },
       "zone_4_speed": {
-        "name": "Bieg strefy 4"
+        "name": "Przedział 4: bieg"
       },
       "zone_5_speed": {
-        "name": "Bieg strefy 5"
+        "name": "Przedział 5: bieg"
       },
       "zone_1_temperature": {
-        "name": "Temperatura strefy 1"
+        "name": "Przedział 1: temperatura"
       },
       "zone_2_temperature": {
-        "name": "Temperatura strefy 2"
+        "name": "Przedział 2: temperatura"
       },
       "zone_3_temperature": {
-        "name": "Temperatura strefy 3"
+        "name": "Przedział 3: temperatura"
       },
       "zone_4_temperature": {
-        "name": "Temperatura strefy 4"
+        "name": "Przedział 4: temperatura"
       },
       "zone_5_temperature": {
-        "name": "Temperatura strefy 5"
+        "name": "Przedział 5: temperatura"
       },
       "fan_power_1": {
         "name": "Moc/przepływ biegu 1"
@@ -370,7 +349,7 @@
     },
     "select": {
       "program_day": {
-        "name": "Dzień programu",
+        "name": "Harmonogram: dzień",
         "state": {
           "sunday": "Niedziela",
           "monday": "Poniedziałek",
@@ -385,6 +364,20 @@
     "button": {
       "sync_clock": {
         "name": "Ustaw zegar z Home Assistant"
+      }
+    },
+    "time": {
+      "period_1_until": {
+        "name": "Przedział 1: do godziny"
+      },
+      "period_2_until": {
+        "name": "Przedział 2: do godziny"
+      },
+      "period_3_until": {
+        "name": "Przedział 3: do godziny"
+      },
+      "period_4_until": {
+        "name": "Przedział 4: do godziny"
       }
     }
   },
@@ -508,48 +501,36 @@
               "party_name": "Funkcja impreza (nazwa)",
               "party_write_address": "Funkcja impreza (adres zapisu)",
               "party_verify_address": "Funkcja impreza (adres weryfikacji)",
-              "zone_1_end_name": "Koniec strefy 1 (nazwa)",
-              "zone_1_end_write_address": "Koniec strefy 1 (adres zapisu)",
-              "zone_1_end_verify_address": "Koniec strefy 1 (adres weryfikacji)",
-              "zone_2_end_name": "Koniec strefy 2 (nazwa)",
-              "zone_2_end_write_address": "Koniec strefy 2 (adres zapisu)",
-              "zone_2_end_verify_address": "Koniec strefy 2 (adres weryfikacji)",
-              "zone_3_end_name": "Koniec strefy 3 (nazwa)",
-              "zone_3_end_write_address": "Koniec strefy 3 (adres zapisu)",
-              "zone_3_end_verify_address": "Koniec strefy 3 (adres weryfikacji)",
-              "zone_4_end_name": "Koniec strefy 4 (nazwa)",
-              "zone_4_end_write_address": "Koniec strefy 4 (adres zapisu)",
-              "zone_4_end_verify_address": "Koniec strefy 4 (adres weryfikacji)",
-              "zone_1_speed_name": "Bieg strefy 1 (nazwa)",
-              "zone_1_speed_write_address": "Bieg strefy 1 (adres zapisu)",
-              "zone_1_speed_verify_address": "Bieg strefy 1 (adres weryfikacji)",
-              "zone_2_speed_name": "Bieg strefy 2 (nazwa)",
-              "zone_2_speed_write_address": "Bieg strefy 2 (adres zapisu)",
-              "zone_2_speed_verify_address": "Bieg strefy 2 (adres weryfikacji)",
-              "zone_3_speed_name": "Bieg strefy 3 (nazwa)",
-              "zone_3_speed_write_address": "Bieg strefy 3 (adres zapisu)",
-              "zone_3_speed_verify_address": "Bieg strefy 3 (adres weryfikacji)",
-              "zone_4_speed_name": "Bieg strefy 4 (nazwa)",
-              "zone_4_speed_write_address": "Bieg strefy 4 (adres zapisu)",
-              "zone_4_speed_verify_address": "Bieg strefy 4 (adres weryfikacji)",
-              "zone_5_speed_name": "Bieg strefy 5 (nazwa)",
-              "zone_5_speed_write_address": "Bieg strefy 5 (adres zapisu)",
-              "zone_5_speed_verify_address": "Bieg strefy 5 (adres weryfikacji)",
-              "zone_1_temperature_name": "Temperatura strefy 1 (nazwa)",
-              "zone_1_temperature_write_address": "Temperatura strefy 1 (adres zapisu)",
-              "zone_1_temperature_verify_address": "Temperatura strefy 1 (adres weryfikacji)",
-              "zone_2_temperature_name": "Temperatura strefy 2 (nazwa)",
-              "zone_2_temperature_write_address": "Temperatura strefy 2 (adres zapisu)",
-              "zone_2_temperature_verify_address": "Temperatura strefy 2 (adres weryfikacji)",
-              "zone_3_temperature_name": "Temperatura strefy 3 (nazwa)",
-              "zone_3_temperature_write_address": "Temperatura strefy 3 (adres zapisu)",
-              "zone_3_temperature_verify_address": "Temperatura strefy 3 (adres weryfikacji)",
-              "zone_4_temperature_name": "Temperatura strefy 4 (nazwa)",
-              "zone_4_temperature_write_address": "Temperatura strefy 4 (adres zapisu)",
-              "zone_4_temperature_verify_address": "Temperatura strefy 4 (adres weryfikacji)",
-              "zone_5_temperature_name": "Temperatura strefy 5 (nazwa)",
-              "zone_5_temperature_write_address": "Temperatura strefy 5 (adres zapisu)",
-              "zone_5_temperature_verify_address": "Temperatura strefy 5 (adres weryfikacji)",
+              "zone_1_speed_name": "Przedział 1: bieg (nazwa)",
+              "zone_1_speed_write_address": "Przedział 1: bieg (adres zapisu)",
+              "zone_1_speed_verify_address": "Przedział 1: bieg (adres weryfikacji)",
+              "zone_2_speed_name": "Przedział 2: bieg (nazwa)",
+              "zone_2_speed_write_address": "Przedział 2: bieg (adres zapisu)",
+              "zone_2_speed_verify_address": "Przedział 2: bieg (adres weryfikacji)",
+              "zone_3_speed_name": "Przedział 3: bieg (nazwa)",
+              "zone_3_speed_write_address": "Przedział 3: bieg (adres zapisu)",
+              "zone_3_speed_verify_address": "Przedział 3: bieg (adres weryfikacji)",
+              "zone_4_speed_name": "Przedział 4: bieg (nazwa)",
+              "zone_4_speed_write_address": "Przedział 4: bieg (adres zapisu)",
+              "zone_4_speed_verify_address": "Przedział 4: bieg (adres weryfikacji)",
+              "zone_5_speed_name": "Przedział 5: bieg (nazwa)",
+              "zone_5_speed_write_address": "Przedział 5: bieg (adres zapisu)",
+              "zone_5_speed_verify_address": "Przedział 5: bieg (adres weryfikacji)",
+              "zone_1_temperature_name": "Przedział 1: temperatura (nazwa)",
+              "zone_1_temperature_write_address": "Przedział 1: temperatura (adres zapisu)",
+              "zone_1_temperature_verify_address": "Przedział 1: temperatura (adres weryfikacji)",
+              "zone_2_temperature_name": "Przedział 2: temperatura (nazwa)",
+              "zone_2_temperature_write_address": "Przedział 2: temperatura (adres zapisu)",
+              "zone_2_temperature_verify_address": "Przedział 2: temperatura (adres weryfikacji)",
+              "zone_3_temperature_name": "Przedział 3: temperatura (nazwa)",
+              "zone_3_temperature_write_address": "Przedział 3: temperatura (adres zapisu)",
+              "zone_3_temperature_verify_address": "Przedział 3: temperatura (adres weryfikacji)",
+              "zone_4_temperature_name": "Przedział 4: temperatura (nazwa)",
+              "zone_4_temperature_write_address": "Przedział 4: temperatura (adres zapisu)",
+              "zone_4_temperature_verify_address": "Przedział 4: temperatura (adres weryfikacji)",
+              "zone_5_temperature_name": "Przedział 5: temperatura (nazwa)",
+              "zone_5_temperature_write_address": "Przedział 5: temperatura (adres zapisu)",
+              "zone_5_temperature_verify_address": "Przedział 5: temperatura (adres weryfikacji)",
               "fan_power_1_name": "Moc biegu 1 (nazwa)",
               "fan_power_1_write_address": "Moc biegu 1 (adres zapisu)",
               "fan_power_1_verify_address": "Moc biegu 1 (adres weryfikacji)",
@@ -580,8 +561,8 @@
   },
   "services": {
     "get_schedule": {
-      "name": "Odczytaj program tygodniowy",
-      "description": "Czyta końce stref, biegi i temperatury dla wszystkich siedmiu dni. Wybór dnia programu jest potem przywracany.",
+      "name": "Odczytaj harmonogram tygodniowy",
+      "description": "Czyta pięć przedziałów (od, do, bieg, temperatura) dla wszystkich siedmiu dni. Wybór dnia harmonogramu jest potem przywracany.",
       "fields": {
         "config_entry_id": {
           "name": "Urządzenie",
@@ -590,8 +571,8 @@
       }
     },
     "set_schedule": {
-      "name": "Zapisz program tygodniowy",
-      "description": "Zapisuje strefy programu tygodniowego dla wybranych dni. Pominięte listy zostają bez zmian; wybór dnia programu jest potem przywracany.",
+      "name": "Zapisz harmonogram tygodniowy",
+      "description": "Zapisuje wszystkie pięć przedziałów wybranych dni, jak jedną tabelę dnia na panelu urządzenia. Wybór dnia harmonogramu jest potem przywracany.",
       "fields": {
         "config_entry_id": {
           "name": "Urządzenie",
@@ -601,17 +582,9 @@
           "name": "Dni",
           "description": "Dni do zapisania."
         },
-        "zone_ends": {
-          "name": "Końce stref",
-          "description": "Cztery rosnące godziny końca stref 1-4, jako GG:MM albo minuty od północy, co kwadrans. Strefa 5 trwa do północy."
-        },
-        "zone_speeds": {
-          "name": "Biegi stref",
-          "description": "Pięć biegów (0-3) dla stref 1-5."
-        },
-        "zone_temperatures": {
-          "name": "Temperatury stref",
-          "description": "Pięć temperatur zadanych (10-30 °C) dla stref 1-5."
+        "periods": {
+          "name": "Przedziały",
+          "description": "Pięć przedziałów po kolei, każdy z biegiem (0-3) i temperaturą (10-30 °C). Przedziały 1-4 mają też until (GG:MM, co kwadrans, rosnąco); przedział 5 trwa do północy i nie ma until."
         }
       }
     }

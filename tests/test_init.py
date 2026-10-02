@@ -17,8 +17,9 @@ from custom_components.wanas.const import (
 
 from .conftest import ALL_MODULES, CONNECTION
 
-# 51 register entities plus the controller clock, program day select and clock button.
-FULL_SET = 54
+# 47 register entities, 4 period-until times, the controller clock and schedule
+# summary sensors, the schedule day select and the clock button.
+FULL_SET = 55
 COOLER_ENTITIES = 3
 HUMIDIFIER_ENTITIES = 2
 MAXICONTROL_ENTITIES = 6

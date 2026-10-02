@@ -26,15 +26,13 @@ set_schedule:
             - thursday
             - friday
             - saturday
-    zone_ends:
-      example: '["05:00", "08:00", "16:00", "22:00"]'
-      selector:
-        object:
-    zone_speeds:
-      example: "[1, 2, 1, 2, 1]"
-      selector:
-        object:
-    zone_temperatures:
-      example: "[20, 21, 20, 21, 19]"
+    periods:
+      required: true
+      example: >-
+        [{"until": "06:00", "speed": 1, "temperature": 18},
+        {"until": "07:00", "speed": 2, "temperature": 20},
+        {"until": "14:00", "speed": 1, "temperature": 20},
+        {"until": "15:00", "speed": 3, "temperature": 20},
+        {"speed": 1, "temperature": 18}]
       selector:
         object:

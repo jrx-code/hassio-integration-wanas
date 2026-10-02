@@ -1,107 +1,265 @@
-# Wanas Rekuperator — Home Assistant Integration
+# Wanas heat recovery ventilator for Home Assistant
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
+[![Release](https://img.shields.io/github/v/release/jrx-code/hassio-integration-wanas)](https://github.com/jrx-code/hassio-integration-wanas/releases/latest)
+[![Validate](https://github.com/jrx-code/hassio-integration-wanas/actions/workflows/validate.yml/badge.svg)](https://github.com/jrx-code/hassio-integration-wanas/actions/workflows/validate.yml)
+[![Home Assistant 2024.12+](https://img.shields.io/badge/Home%20Assistant-2024.12%2B-blue.svg)](https://www.home-assistant.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![HA Version](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-blue.svg)](https://www.home-assistant.io/)
 
-Full control of your **Wanas recuperator** directly from Home Assistant via **Modbus** (TCP / UDP / RTU over TCP).
+Local control of a **Wanas** heat recovery ventilator (Combo 430/630 and relatives) over
+**Modbus** (RTU over TCP, TCP or UDP): temperatures, airflow, heat recovery, filter, modules,
+timed functions, the weekly schedule and the controller clock, plus two dashboard cards that
+ship with the integration.
 
-Monitor temperatures, airflow, fan speeds, filter status — and toggle bypass, heater, cooler, humidifier, vacation mode, fireplace, and party mode — all from your dashboard.
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="images/card.png" alt="Wanas card: airflow diagram, readouts, modules"></td>
+    <td width="50%" valign="top"><img src="images/schedule.png" alt="Wanas schedule card: one day as a timeline and a table of five periods"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="images/compact.png" alt="Compact one-row tile" width="50%"></td>
+  </tr>
+</table>
 
-![Wanas-pip-boy](https://github.com/jrx-code/hassio-integration-wanas/blob/main/images/pip-boy.jpg)
----
+## Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Dashboard cards](#dashboard-cards)
+- [Heat recovery](#heat-recovery)
+- [Weekly schedule and controller clock](#weekly-schedule-and-controller-clock)
+- [Entities](#entities)
+- [Requirements](#requirements)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
 
 ## Features
 
-- **55 entities** built on the manufacturer register table: airflow, five temperatures, fan
-  speeds, filter countdown, the six status flags, the four digital inputs, writable
-  controls for bypass, GWC, humidifier, heater, cooler, the timed functions and the fan
-  power setpoints, the weekly schedule and the controller clock
-- **Polish and English** entity and config-flow names, picked from the Home Assistant language
-- **Asks which optional modules the unit has** (heater, cooler, humidifier, maxiCONTROL room panels) and skips their
-  entities entirely when they are not fitted; changeable afterwards without re-adding
-- **Three protocols**: RTU over TCP (default), plain TCP, UDP
-- **Advanced mode** lets you retarget every Modbus register and rename any entity
-- **Short reads**: registers are grouped into blocks of at most 16, because RS485 gateways
-  stop answering long requests and one unanswered read takes down every entity
-- **One exchange at a time**: reads and writes share an `asyncio.Lock`, because RTU frames
-  carry no transaction id and this gateway is transparent
-- **Weekly schedule, day by day, as on the panel**: five periods per day with a time of day
-  where each one ends, a fan speed and a temperature; `wanas.get_schedule` /
-  `wanas.set_schedule` for the whole week in one call
-- **Controller clock** as a timestamp sensor, with a button that sets it from Home Assistant
-- **Diagnostics** with the whole register bank, the read plan and the entity map, host redacted
-- **Configurable polling interval** (5 to 600 s)
-- **Auto-reconnect** on a dropped connection, and writes rejected by the device surface as a
-  Home Assistant error naming the register and the value
+- **59 entities** on a fully equipped unit (65 with maxiCONTROL room panels), mapped to the
+  manufacturer's register table: airflow, five temperatures, fan speeds, filter countdown,
+  status flags, digital inputs, bypass, ground loop (GWC), humidifier, heater, cooler, the
+  timed functions, fan setpoints, the weekly schedule and the controller clock.
+- **Two dashboard cards** served by the integration itself: no Lovelace resource to add,
+  full visual editors, English and Polish.
+- **Heat recovery** power, efficiency and recovered energy, computed from readings already
+  polled; the energy sensor works in the Energy dashboard.
+- **Weekly schedule as the unit's panel shows it**: five periods a day with until times,
+  speed and temperature, editable per day in the card or for the whole week with
+  `wanas.set_schedule`.
+- **Optional modules declared, not guessed**: heater, cooler, humidifier and maxiCONTROL
+  entities are created only when fitted, and can be changed later without re-adding.
+- **Safe on a shared RS485 bus**: one exchange at a time, reads of at most 16 registers,
+  a 30 s deadline on every call, and a fresh connection after three failed polls.
+- **English and Polish** names for every entity and the whole config flow.
+- **Diagnostics** with the register bank, the read plan and the entity map (host redacted).
 
 ## Installation
 
 ### HACS (recommended)
 
-1. Open HACS → **Integrations** → three-dot menu → **Custom repositories**
-2. Add this repository URL, category: **Integration**
-3. Search for **Wanas** and install
-4. Restart Home Assistant
+The repository is not in the HACS default store yet, so add it as a custom repository:
+
+1. HACS → three-dot menu → **Custom repositories**.
+2. Repository `https://github.com/jrx-code/hassio-integration-wanas`, type **Integration**.
+3. Find **hassio-integration-wanas** and download it. (A different integration in the store
+   called "Wanas" uses the same `wanas` domain; do not install both.)
+4. Restart Home Assistant.
 
 ### Manual
 
-1. Copy the `custom_components/wanas` folder into your Home Assistant `config/custom_components/` directory
-2. Restart Home Assistant
+Copy `custom_components/wanas` into `config/custom_components/` and restart Home Assistant.
 
 ## Configuration
 
-1. Go to **Settings → Devices & Services → Add Integration**
-2. Search for **Wanas**
-3. Enter connection details:
+1. **Settings → Devices & services → Add integration → Wanas**.
+2. Connection:
 
-   | Field | Default | Description |
-   |-------|---------|-------------|
-   | Host | — | IP address of the recuperator |
-   | Port | `502` | Modbus port |
-   | Slave ID | `1` | Modbus device ID |
-   | Protocol | `rtu_over_tcp` | `rtu_over_tcp`, `tcp`, or `udp` |
+   | Field | Default | |
+   |---|---|---|
+   | Host | | IP address of the Modbus gateway |
+   | Port | `502` | |
+   | Slave ID | `1` | |
+   | Protocol | `rtu_over_tcp` | `rtu_over_tcp`, `tcp` or `udp` |
 
-4. Tick only the optional modules the unit actually has. The controller answers on the
-   heater, cooler and humidifier registers whether or not the modules are fitted, so their
-   presence cannot be probed. Clearing one means its entities are never created:
+3. Tick only the modules the unit actually has. The controller answers on the heater,
+   cooler and humidifier registers whether or not they are fitted, so presence cannot be
+   probed. An unticked module never gets entities:
 
    | Module | Entities skipped |
    |---|---|
-   | Heater | `binary_sensor` heater state, `switch` heater, `number` heater days |
-   | Cooler | `binary_sensor` cooler state, `switch` cooler, `number` cooler days |
-   | Humidifier | `binary_sensor` humidifier state, `switch` humidifier |
-   | maxiCONTROL room panels | room and bathroom 1/2 temperature and humidity `sensor`s |
+   | Heater | heater state, heater switch, heater days |
+   | Cooler | cooler state, cooler switch, cooler days |
+   | Humidifier | humidifier state, humidifier switch |
+   | maxiCONTROL room panels | room and bathroom 1/2 temperature and humidity |
 
-   maxiCONTROL is unticked by default, and entries created before it was asked about
-   treat it as absent.
+4. The connection is tested before the entry is saved.
 
-5. The integration will test the connection before saving
+Everything can be changed later under **Configure** on the integration card, including the
+polling interval (5 to 600 s). Turning a module off removes its entities instead of leaving
+them unavailable.
 
-Answers can be corrected later under **Configure** on the integration card. Turning a module
-off removes its entities from the registry rather than leaving them unavailable.
+### Custom register addresses
 
-### Advanced: Custom Register Addresses
+For firmware with a different register map, tick **Show advanced configuration** on the
+first form, or later **Reconfigure register addresses and names** under **Configure**. Every
+address and name can be changed. Only values that differ from the defaults are stored, so
+untouched registers keep following the built-in map when a release corrects it.
 
-If your device uses non-standard register mapping:
+## Dashboard cards
 
-1. Add the integration and tick **Show advanced configuration** on the first form
-2. After a successful connection test, a second step appears
-3. Modify any register address (all fields are pre-filled with defaults)
+The integration registers both cards itself. After installing or updating, reload the
+browser, then **Edit dashboard → Add card → By card** and search for **Wanas**.
 
-The same form is available after setup: open **Configure** on the integration card and tick
-**Reconfigure register addresses and names**. It opens on the values currently in use. Only
-fields that differ from the defaults are stored, so an untouched field keeps following the
-built-in register map when a later release corrects it, and restoring every field to its
-default removes the overrides altogether.
+| Card | |
+|---|---|
+| **Wanas** (`custom:wanas-card`) | The airflow through the unit: duct colours follow the air temperature, the dashes move at the fan speed, an open bypass reroutes the supply past the core, and the core shows recovery efficiency and power. Below: speed (with a note when a digital input overrides the schedule), airflow, recovered power with today's energy, filter days, modules, timed functions with their countdown, and the current schedule period. |
+| **Wanas** compact (`compact: true`) | One row: speed, airflow, supply temperature, recovery, filter. |
+| **Wanas schedule** (`custom:wanas-schedule-card`) | One day as a 24-hour timeline (bar height is the speed, the number the temperature) and the five-period table. Edits follow the unit's rules; one save can write several days. A week overview below. |
 
-This is useful for custom firmware or alternative Wanas device variants.
+Both have a visual editor, so nothing needs typing. Only options you change are saved.
+
+<img src="images/card-editor.png" alt="Card editor with sections, content and behaviour groups" width="720">
+
+### Card options
+
+`wanas-card`
+
+| Option | Default | |
+|---|---|---|
+| `device_id` | first unit | which Wanas device |
+| `title`, `hide_title` | "Ventilation" / "Rekuperator", `false` | header text, or no header |
+| `compact` | `false` | one-row tile |
+| `show_diagram`, `show_readouts`, `show_modules`, `show_timed`, `show_now`, `show_clock` | `true` | sections: airflow diagram, readout tiles, module chips, timed functions, current schedule period, clock drift line |
+| `readouts` | all | any of `speed`, `airflow`, `recovery`, `filter` |
+| `modules` | all fitted | any of `bypass`, `gwc`, `heater`, `cooler`, `humidifier` |
+| `timed` | all | any of `fireplace_switch`, `party_switch`, `vacation_switch` |
+| `filter_warning_days` | `7` | the filter tile turns amber at or below this |
+| `animate` | `true` | moving air and fans |
+
+`wanas-schedule-card`
+
+| Option | Default | |
+|---|---|---|
+| `device_id` | first unit | which Wanas device |
+| `title`, `hide_title` | "Schedule" / "Harmonogram", `false` | header text, or no header |
+| `read_only` | `false` | values only, no steppers and no save |
+| `show_timeline`, `show_table`, `show_week`, `show_reload` | `true` | timeline, period table, week overview, "read from unit" button |
+| `start_day` | `today` | or `monday` ... `sunday` |
+
+```yaml
+type: custom:wanas-card
+title: Ventilation
+readouts: [speed, airflow, recovery]
+show_timed: false
+```
+
+Notes:
+
+- Both cards find their entities through the entity registry, so renamed entity ids keep
+  working. With more than one unit, pick the device in the editor.
+- Layout follows the card's own width, not the screen's: readouts drop to two columns and
+  the schedule table hides its "from" column (always the previous row's "until") when narrow.
+- The animation runs at 10 frames per second and stops while the card is off screen, the tab
+  is hidden or the system asks for reduced motion.
+- Colours come from the theme; the Polish texts follow the user's language.
+
+<details>
+<summary>The same card in Polish</summary>
+
+<img src="images/card-pl.png" alt="Wanas card with Polish labels" width="600">
+
+</details>
+
+## Heat recovery
+
+Three sensors computed from registers the integration already reads, with no extra bus
+traffic:
+
+| Sensor | Unit | |
+|---|---|---|
+| Heat recovery power | W | `0.335 × supply airflow [m³/h] × (supply − outdoor) [K]`; 0.335 is air density 1.2 kg/m³ × specific heat 1005 J/(kg·K) per hour |
+| Heat recovery efficiency | % | `(supply − outdoor) / (room − outdoor)`, the supply-side temperature ratio of EN 308; unknown when room and outdoor differ by less than 2 K |
+| Recovered energy | kWh | the power integrated on every poll, `total_increasing`, kept across restarts |
+
+- In summer, with the outdoor air warmer than the room, the core recovers cooling: power
+  stays positive and the `mode` attribute reads `cooling`. Supply air warmer than a warm
+  outdoor is fan heat and counts as 0.
+- With the bypass open or the heater, cooler or ground loop running, the supply temperature
+  no longer measures the core alone: power and efficiency are unknown and nothing is added
+  to the energy. A sensor fault (63066, read as −247 °C) does the same.
+- The supply side also picks up the supply fan's motor heat, so it reads higher than the
+  extract side, which is in the `extract_side_power` attribute. On a Combo 430 at 396 m³/h,
+  15.4 °C outside and 24.1 °C inside, the two were 822 W and 547 W.
+
+## Weekly schedule and controller clock
+
+The unit's panel calls this **Programy** (the manual: *harmonogram tygodniowy*). Each day has
+five periods with an until time, a fan speed and a temperature. Period 1 starts at 00:00 and
+period 5 ends at 00:00, so four times are set, each the end of one period and the start of
+the next.
+
+The controller keeps a separate schedule for each day but shows one at a time: register 8
+selects the day, and registers 10 to 23 read and write it. Register 8 is **not** the current
+weekday (checked on a Combo 430: with Saturday selected, period 1 speed changed on Saturday
+only).
+
+| Entity | Register | English | Polish |
+|---|---|---|---|
+| `select` | 8 | Schedule day | Harmonogram: dzień |
+| `time` | 10-13 | Period 1-4 until | Przedział 1-4: do godziny |
+| `number` | 14-18 | Period 1-5 fan speed | Przedział 1-5: bieg |
+| `number` | 19-23 | Period 1-5 temperature | Przedział 1-5: temperatura |
+| `sensor` | 8, 10-23 | Schedule (selected day) | Harmonogram (wybrany dzień) |
+| `sensor` | | Current schedule period | Bieżący przedział harmonogramu |
+| `button` | 50, 51 | Set clock from Home Assistant | Ustaw zegar z Home Assistant |
+
+- Period entities act on the day the **Schedule day** select shows; changing the select does
+  not change what the unit runs today.
+- Until times must be on the quarter hour, between 00:15 and 23:45, after the previous
+  period's end and before the next one's. Anything else is rejected with a message saying
+  why; nothing is rounded.
+- The integration keeps the whole week in memory: read at start-up and daily at 03:17, and
+  kept up to date by every poll and every write. The cards and the **Current schedule
+  period** sensor use it without extra bus traffic.
+
+### Services
+
+```yaml
+# Read all seven days: {monday: {periods: [{from, until, speed, temperature}, ...]}, ...}
+action: wanas.get_schedule
+data:
+  refresh: true          # optional: read the unit instead of the in-memory copy
+response_variable: week
+
+# Write whole days, one row per period, like the panel's table
+action: wanas.set_schedule
+data:
+  days: [monday, tuesday, wednesday, thursday, friday]
+  periods:
+    - {until: "06:00", speed: 1, temperature: 18}
+    - {until: "07:00", speed: 2, temperature: 20}
+    - {until: "14:00", speed: 1, temperature: 20}
+    - {until: "15:00", speed: 3, temperature: 20}
+    - {speed: 1, temperature: 18}        # period 5 runs to midnight
+```
+
+Both hold the bus for the whole exchange and put register 8 back. All five periods are
+required; speeds are 0 to 3, temperatures 10 to 30 °C. Pass `config_entry_id` only when more
+than one unit is set up.
+
+### Controller clock
+
+Local wall time: date `day<<11 | month<<7 | (year-2000)` in register 50, time
+`hour<<8 | minute` in register 51 (the DTR's `hour<<7` example does not match the unit). It
+drifts by minutes per week and the schedule runs on it, so it is exposed as a timestamp
+sensor with a button that sets it from Home Assistant.
 
 ## Entities
 
-59 entities on a fully equipped unit without maxiCONTROL: 17 sensors, 10 binary sensors,
-8 switches, 18 numbers, 4 times, 1 select and 1 button. Names are translated, so the Polish column is
-what a Polish instance displays.
+59 on a fully equipped unit: 17 sensors, 10 binary sensors, 8 switches, 18 numbers, 4 times,
+1 select, 1 button. maxiCONTROL adds 6 sensors. Names are translated; the Polish column is
+what a Polish instance shows.
 
 ### Sensors
 
@@ -120,42 +278,14 @@ what a Polish instance displays.
 | 37 | System errors | Błędy systemu |
 | 50, 51 | Controller clock | Zegar sterownika |
 | 0, 4, 6, 7 | Heat recovery power, efficiency, recovered energy | Moc odzysku ciepła, Sprawność odzysku ciepła, Energia odzyskana |
-| 55 | Room humidity (maxiCONTROL) | Wilgotność w pokoju |
-| 56 | Bathroom 1 humidity (maxiCONTROL) | Wilgotność w łazience 1 |
-| 57 | Bathroom 2 humidity (maxiCONTROL) | Wilgotność w łazience 2 |
-| 65 | Room temperature (maxiCONTROL) | Temperatura w pokoju |
-| 66 | Bathroom 1 temperature (maxiCONTROL) | Temperatura w łazience 1 |
-| 67 | Bathroom 2 temperature (maxiCONTROL) | Temperatura w łazience 2 |
+| 55-57 | Room / bathroom 1 / bathroom 2 humidity (maxiCONTROL) | Wilgotność w pokoju / łazience 1 / łazience 2 |
+| 65-67 | Room / bathroom 1 / bathroom 2 temperature (maxiCONTROL) | Temperatura w pokoju / łazience 1 / łazience 2 |
 
 Registers 55 to 57 and 65 to 67 come from a user's working Modbus setup (issue #1); the
-manufacturer table in `config/hardware/` ends at register 54.
-
-### Heat recovery
-
-Three sensors computed from readings the integration already polls, with no extra bus
-traffic:
-
-- **Heat recovery power** (W): `0.335 × supply airflow [m³/h] × (supply − outdoor) [K]`,
-  where 0.335 is air density 1.2 kg/m³ times specific heat 1005 J/(kg·K) per hour.
-  When the outdoor air is warmer than the room, the core recovers cooling instead: the
-  power stays positive and the `mode` attribute says `cooling`. Supply air warmer than a
-  warm outdoor is fan heat and counts as 0.
-- **Heat recovery efficiency** (%): `(supply − outdoor) / (room − outdoor)`, the supply-side
-  temperature ratio of EN 308. Unknown when room and outdoor differ by less than 2 K.
-- **Recovered energy** (kWh, `total_increasing`): the power integrated on every poll, kept
-  across restarts. Usable in the Energy dashboard and long-term statistics.
-
-With the bypass open, or the heater, cooler or ground loop (GWC) running, the supply
-temperature no longer measures the core alone: power and efficiency go unknown and nothing
-is added to the energy. A sensor fault (63066, read as -247 °C) does the same.
-
-The supply side also picks up the supply fan's motor heat, so it reads higher than the
-extract side. The power sensor carries the extract-side figure in `extract_side_power`;
-on a Combo 430 at 396 m³/h, 15.4 °C outside and 24.1 °C inside the two were 822 W and 547 W.
+manufacturer table in `config/hardware/` ends at register 54. Schedule sensors are listed
+under [Weekly schedule](#weekly-schedule-and-controller-clock).
 
 ### Binary sensors
-
-Registers 46 to 49 are the controller's read-only digital inputs.
 
 | Register | English | Polish |
 |---|---|---|
@@ -170,6 +300,8 @@ Registers 46 to 49 are the controller's read-only digital inputs.
 | 48 | Hood input | Wejście okapu |
 | 49 | Fire alarm input | Wejście przeciwpożarowe |
 
+Registers 46 to 49 are the controller's read-only digital inputs.
+
 ### Switches
 
 | Write → verify | English | Polish |
@@ -183,237 +315,79 @@ Registers 46 to 49 are the controller's read-only digital inputs.
 | 44 → 44 | Fireplace (3 min) | Kominek (3 min) |
 | 45 → 45 | Party (12 h) | Impreza (12 h) |
 
-The last three are one-tap versions of the timed functions: on writes the longest duration
-the register takes, off writes 0, and the switch stays on while the counter runs down. The
-numbers below set any other duration.
+The last three are one-tap timed functions: on writes the longest duration the register
+takes, off writes 0, and the switch stays on while the counter runs down. The numbers below
+set any other duration.
 
 ### Numbers
 
 | Register | Range | Unit | English | Polish |
 |---|---|---|---|---|
-| 41 | 0 to 180 | dni | Heater days | Nagrzewnica (dni) |
-| 42 | 0 to 180 | dni | Cooler days | Chłodnica (dni) |
-| 43 | 0 to 30 | dni | Vacation days | Tryb urlopowy (dni) |
+| 41 | 0 to 180 | days | Heater days | Nagrzewnica (dni) |
+| 42 | 0 to 180 | days | Cooler days | Chłodnica (dni) |
+| 43 | 0 to 30 | days | Vacation days | Tryb urlopowy (dni) |
 | 44 | 0 to 180 | s | Fireplace | Funkcja kominek |
 | 45 | 0 to 720 | min | Party | Funkcja impreza |
-| 52 | 1 to 1600 | % or m³/h | Fan power/flow 1 | Moc/przepływ biegu 1 |
-| 53 | 1 to 1600 | % or m³/h | Fan power/flow 2 | Moc/przepływ biegu 2 |
-| 54 | 1 to 1600 | % or m³/h | Fan power/flow 3 | Moc/przepływ biegu 3 |
+| 52-54 | 1 to 1600 | % or m³/h | Fan power/flow 1-3 | Moc/przepływ biegu 1-3 |
 
-Registers 52 to 54 hold fan power in percent, or the airflow in m³/h when the unit runs in
-constant-flow mode. The manufacturer table gives 1 to 100 %, but a Combo 430 in flow mode
-reads 100, 200 and 400 there, so the numbers accept up to 1600 and carry no unit.
+- The day unit is translated, so the interface shows "days" or "dni" by the user's
+  language; templates see the English `days`.
+- Registers 52 to 54 hold fan power in percent, or the airflow in m³/h when the unit runs in
+  constant-flow mode. The manufacturer table gives 1 to 100 %, but a Combo 430 in flow mode
+  reads 100, 200 and 400, so the numbers accept up to 1600 and carry no unit.
+- Registers 41 and 42 are day counters (0 to 180, DTR Combo 430/630, 04.2026); the heater and
+  cooler switches write 1, arming them for a day.
 
-Registers 41 and 42 are day counters on the device. The switches write 1, arming them
-for a day; the matching Heater days / Cooler days numbers give the full 0 to 180 range
-(DTR Combo 430/630, 04.2026).
+### No fan or climate entity
 
-The weekly schedule entities (registers 8 and 10 to 23) are described below.
-
-## Weekly schedule and controller clock
-
-The unit's panel calls this **Programy** (the manual: *harmonogram tygodniowy*). Each day is a
-table of five periods: from, until, fan speed and temperature. Period 1 starts at 00:00 and
-period 5 ends at 00:00, so there are four times to set, each the end of one period and the
-start of the next.
-
-| From | Until | Speed | Temperature |
-|---|---|---|---|
-| 00:00 | Period 1 until | Period 1 fan speed | Period 1 temperature |
-| Period 1 until | Period 2 until | Period 2 fan speed | Period 2 temperature |
-| … | … | … | … |
-| Period 4 until | 00:00 | Period 5 fan speed | Period 5 temperature |
-
-The controller keeps a separate schedule for each day but shows one day at a time: register 8
-selects the day, and registers 10 to 23 read and write that day. Register 8 is **not** the
-current weekday. This was checked on a Combo 430: with Saturday selected, period 1 speed was
-changed from 2 to 1, Sunday and Friday still read 2, and Saturday kept 1 after stepping
-through the other days. The value was then put back.
-
-| Entity | Register | English | Polish |
-|---|---|---|---|
-| `select` | 8 | Schedule day | Harmonogram: dzień |
-| `time` | 10-13 | Period 1-4 until | Przedział 1-4: do godziny |
-| `number` | 14-18 | Period 1-5 fan speed | Przedział 1-5: bieg |
-| `number` | 19-23 | Period 1-5 temperature | Przedział 1-5: temperatura |
-| `sensor` | 8, 10-23 | Schedule (selected day) | Harmonogram (wybrany dzień) |
-| `button` | 50, 51 | Set clock from Home Assistant | Ustaw zegar z Home Assistant |
-
-- All period entities act on the day the **Schedule day** select shows. Pick the day first,
-  then change the periods. Changing the select does not change what the unit runs today.
-- **Until** times must be on the quarter hour, between 00:15 and 23:45, and later than the
-  previous period's end and earlier than the next one's. Anything else is rejected with an
-  error that says why. Nothing is rounded.
-- Each **fan speed** entity carries `from` and `until` attributes.
-- The **Schedule** sensor reads like the panel's table, for example
-  `00:00-06:00 I 18° | 06:00-07:00 II 20° | 07:00-14:00 I 20° | 14:00-15:00 III 20° | 15:00-00:00 I 18°`,
-  with the day and the five periods as attributes.
-
-For whole-week work there are two services. Both hold the bus for the whole exchange and put
-register 8 back where it was:
-
-```yaml
-# Read all seven days: {monday: {periods: [{from, until, speed, temperature}, ...]}, ...}
-action: wanas.get_schedule
-response_variable: week
-
-# Write whole days, one row per period, like the panel's table
-action: wanas.set_schedule
-data:
-  days: [monday, tuesday, wednesday, thursday, friday]
-  periods:
-    - {until: "06:00", speed: 1, temperature: 18}
-    - {until: "07:00", speed: 2, temperature: 20}
-    - {until: "14:00", speed: 1, temperature: 20}
-    - {until: "15:00", speed: 3, temperature: 20}
-    - {speed: 1, temperature: 18}        # period 5 runs to midnight
-```
-
-All five periods are required. Speeds are 0-3, temperatures 10-30 °C, and `until` follows
-the rules above. Pass `config_entry_id` only when more than one unit is set up.
-
-The controller clock is local wall time: date `day<<11 | month<<7 | (year-2000)` in register
-50, time `hour<<8 | minute` in register 51. The time example in the DTR (`hour<<7`) does not
-match the unit. The clock drifts by a few minutes, and the weekly schedule runs on it.
-
-The DTR also lists registers 72 (manual fan speed), 73 (manual temperature setpoint) and 74
-(software version). The Combo 430 this was developed on answers all three with a Modbus
-error, so they are not exposed.
-
-## Dashboard cards
-
-The integration ships two Lovelace cards and registers them itself, so there is no
-resource to add: after installing or updating, reload the browser and pick them in the
-card picker, or add them in YAML:
-
-```yaml
-type: custom:wanas-card            # airflow diagram, temperatures, speed, filter, modules
-type: custom:wanas-card
-compact: true                      # one-row tile
-type: custom:wanas-schedule-card   # five periods per day, as on the unit's panel
-```
-
-- **wanas-card** draws the airflow through the unit: duct colours follow the air
-  temperature, the dashes move at the fan speed, an open bypass reroutes the supply past
-  the core, and the core shows the recovery efficiency and power. Below: speed (with
-  a note when a digital input forces it against the schedule), airflow, recovered power
-  with today's recovered energy (from recorder statistics), filter days (amber
-  at 7 or fewer), the fitted modules, the timed functions with their countdown, and the
-  period the schedule is in now. The controller clock is only mentioned when it drifts by
-  more than two minutes, with a button to set it.
-- **wanas-schedule-card** shows one day as a 24-hour timeline (bar height is the fan
-  speed, the number above is the temperature) and a table of the five periods. Edits follow
-  the same rules as the `time` entities; one save can write several days.
-- Both have a full visual editor (English and Polish), so nothing needs typing: pick them
-  under **Add card → By card → "Wanas"**. Only options changed from their defaults are saved.
-- Both find their entities through the entity registry, so renamed entity ids keep
-  working. With more than one unit, add `device_id: <id>` (or pick it in the editor).
-- Colours come from the theme (`--primary-color`, `--warning-color`, `--divider-color`...).
-
-The integration keeps a copy of the whole week in memory: read at start-up and every day
-at 03:17, updated by every poll for the selected day and by every schedule write.
-`wanas.get_schedule` answers from it; pass `refresh: true` to read the unit again. A week
-read writes the day selector seven times, which is why it is not done on every poll.
-The **Current schedule period** sensor (state 1-5, attributes `from`, `until`, `speed`,
-`temperature`, `day`) comes from the same copy.
-
-### Card options
-
-`wanas-card`
-
-| Option | Default | |
-|---|---|---|
-| `device_id` | first unit | which Wanas device |
-| `title` / `hide_title` | "Rekuperator" / `false` | header text, or no header |
-| `compact` | `false` | one-row tile instead of the full card |
-| `show_diagram`, `show_readouts`, `show_modules`, `show_timed`, `show_now`, `show_clock` | `true` | sections: airflow diagram, readout tiles, module chips, timed functions, current schedule period, clock drift line |
-| `readouts` | all | any of `speed`, `airflow`, `recovery`, `filter` |
-| `modules` | all fitted | any of `bypass`, `gwc`, `heater`, `cooler`, `humidifier` |
-| `timed` | all | any of `fireplace_switch`, `party_switch`, `vacation_switch` |
-| `filter_warning_days` | `7` | filter tile turns amber at or below this |
-| `animate` | `true` | moving airflow and fans |
-
-`wanas-schedule-card`
-
-| Option | Default | |
-|---|---|---|
-| `device_id` | first unit | which Wanas device |
-| `title` / `hide_title` | "Harmonogram" / `false` | header text, or no header |
-| `read_only` | `false` | values only: no steppers, no save |
-| `show_timeline`, `show_table`, `show_week`, `show_reload` | `true` | day timeline, period table, week overview, "read from unit" button |
-| `start_day` | `today` | or `monday` ... `sunday` |
-
-Both cards follow their own width, not the screen's: readouts drop to two columns and the
-schedule table hides the "from" column (always the previous row's "until") when narrow.
-
-A static prototype of both cards is in `docs/cards-prototype.html`.
+No register sets the fan speed: registers 2 and 3 report it, 46 and 47 are read-only inputs,
+and the speed comes from those contacts or the weekly schedule. A `fan` entity could only fake
+it by rewriting the active period, silently editing the schedule. Likewise there is no
+supply-air target temperature for a `climate` entity, only the per-period setpoints.
 
 ## Requirements
 
-- **Home Assistant 2024.7 or newer.** The advanced step uses `data_entry_flow.section`,
-  which is defined in `homeassistant/data_entry_flow.py` from 2024.7.0 and is absent in
-  2024.6.0. The coordinator also lives in `ConfigEntry.runtime_data`, which landed earlier.
-- **pymodbus 3.10 or newer** (installed automatically). Release 3.10.0 renamed the client
-  parameter `slave=` to `device_id=`, which is what this code calls.
-- Network access to the recuperator over Modbus TCP or UDP.
-
-## No fan or climate entity, and why
-
-There is no register that sets the fan speed. Registers 2 and 3 report it, registers 46 and 47
-are read-only digital inputs, and the speed itself comes either from those contacts or from
-the weekly schedule. A `fan` entity could only fake it by rewriting the active period's speed,
-which would silently edit the schedule instead of making a temporary change. The weekly
-schedule is exposed as configuration entities instead, and on this installation the contacts
-are driven by a Zigbee relay outside the integration.
-
-The same applies to `climate`: the unit has no target-temperature register for the supply
-air, only per-period setpoints in the weekly schedule.
-
-## Tests
-
-```bash
-python3 -m venv .venv && .venv/bin/pip install pytest-homeassistant-custom-component pymodbus
-.venv/bin/python -m pytest
-```
-
-26 tests covering the config and options flows (including remapping registers after setup),
-setup, the version 2 migration, module gating, read blocking, bus serialisation, error
-mapping and diagnostics. Coverage is 93 % overall and 95 % on `config_flow.py`.
-
-## Languages
-
-Entity names and the config flow are translated into **English** and **Polish**; Home
-Assistant picks the language from the instance setting. Renaming an entity in the advanced
-register step overrides the translation for that entity only.
-
-Adding a language means one file in `custom_components/wanas/translations/` with the same
-keys as `strings.json`. The `entity` block carries all 34 entity names.
+- **Home Assistant 2024.12 or newer** (translated units for the day counters; the advanced
+  register step also needs `data_entry_flow.section` from 2024.7).
+- **pymodbus 3.10 or newer**, installed automatically (3.10 renamed `slave=` to `device_id=`).
+- Network access to the unit's Modbus gateway. Only one Modbus master should talk to it: a
+  transparent RS485 gateway passes every reply to every connected client.
 
 ## Troubleshooting
 
-**"Cannot connect to the device"**
-- Verify the IP address is reachable (`ping <host>`)
-- Check Modbus port (default 502) is not blocked by firewall
-- Confirm Slave ID matches device configuration
-- Try switching protocol (some devices prefer plain TCP over RTU)
+**Cannot connect to the device**
+- Check the gateway answers (`ping`, port 502 open) and the slave ID.
+- Try another protocol; some gateways expect plain TCP rather than RTU over TCP.
 
 **Readings stop updating**
-- No bus call may take longer than 30 s: a call that never returns is abandoned, the socket
-  is closed and the next poll reconnects. After three failed polls in a row the connection
-  is also opened afresh. Diagnostics show `failed_polls_in_a_row` and `last_poll_success`.
+- Every bus call has a 30 s deadline; a call that never returns is abandoned, the socket is
+  closed and the next poll reconnects. After three failed polls in a row the connection is
+  opened afresh. Diagnostics show `failed_polls_in_a_row` and `last_poll_success`.
+- Make sure nothing else polls the same gateway.
 
-**Sensors show "Unknown"**
-- The device may not support all registers — this is normal for some variants
-- In Advanced Mode, you can remap registers to match your device
+**A sensor shows Unknown**
+- Some variants do not implement every register; remap or ignore it in the advanced step.
+- Heat recovery is unknown by design while the bypass, heater, cooler or ground loop runs.
+
+**The card is missing or old after an update**
+- Reload the browser without cache (Ctrl+Shift+R); in the companion app, reload or restart it.
+
+## Development
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install pytest pytest-cov pytest-homeassistant-custom-component "pymodbus>=3.10"
+.venv/bin/python -m pytest
+```
+
+73 tests with 95 % coverage: config and options flows, migration, module gating, read
+blocking, bus serialisation and deadlines, schedule periods and services, the clock, heat
+recovery and the served cards. CI runs Hassfest, HACS validation, Ruff and pytest.
+
+Translations live in `custom_components/wanas/translations/` (English and Polish, 65 entity
+names); a new language is one file with the keys of `strings.json`. The cards are plain web
+components in `custom_components/wanas/www/wanas-cards.js`, no build step.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
-
-## Author
-
-**JI ENGINEERING**
-
----
-
-<sub>Built with Modbus and determination. Działa jak złoto.</sub>
+MIT, see [LICENSE](LICENSE). Made by **JI ENGINEERING**.

@@ -63,13 +63,16 @@ one carries extra features (heat recovery sensors, a clock-sync button, writable
 
 ### HACS (recommended)
 
-The repository is not in the HACS default store yet, so add it as a custom repository:
+1. HACS (or the Marketplace on Home Assistant 2026.11+) → search for **Wanas (Community)**
+   and download it. (This edition uses the `wanas_community` domain, so it coexists with
+   the default-store "Wanas" integration - you may have both.)
+2. Restart Home Assistant.
 
-1. HACS → three-dot menu → **Custom repositories**.
-2. Repository `https://github.com/jrx-code/hassio-integration-wanas`, type **Integration**.
-3. Find **Wanas (Community)** and download it. (This edition uses the `wanas_community`
-   domain, so it coexists with the default-store "Wanas" integration - you may have both.)
-4. Restart Home Assistant.
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jrx-code&repository=hassio-integration-wanas&category=integration)
+
+If the search finds nothing (the default-store submission is still pending), add it by hand:
+HACS → three-dot menu → **Custom repositories** → `https://github.com/jrx-code/hassio-integration-wanas`,
+type **Integration**.
 
 ### Manual
 

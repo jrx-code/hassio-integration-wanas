@@ -14,7 +14,10 @@
  * restart the airflow animation each time.
  */
 
-const VERSION = "3.5.2";
+const VERSION = "4.0.1";
+// Escapes a value for an innerHTML template: config strings, entity states and error text
+// must never be read as markup.
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const ROMAN = ["0", "I", "II", "III"];
 const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
@@ -262,7 +265,7 @@ class WanasCard extends HTMLElement {
         .r.warn b { color: var(--wc-warn); }
       </style>
       <ha-card><div class="tile" id="tile"><div class="g" id="g">–</div>
-        <div style="min-width:0; display:grid; gap:2px"><span class="l1">${this._config.title || t.unit}</span><span class="l2" id="l2"></span></div>
+        <div style="min-width:0; display:grid; gap:2px"><span class="l1">${esc(this._config.title || t.unit)}</span><span class="l2" id="l2"></span></div>
         <div class="r" id="r"><b id="rf">–</b>${t.filter.toLowerCase()}</div></div></ha-card>`;
       root.getElementById("tile").onclick = () => this._moreInfo(this._id("sensor", "supply_airflow"));
       this._built = true;
@@ -277,7 +280,7 @@ class WanasCard extends HTMLElement {
       filter: `<div class="r" data-k="filter_replacement" id="fbox"><span class="k">${t.filter}</span><span class="v" id="filt"></span><span class="n" id="filtN"></span></div>`,
     };
     const readouts = READOUTS.filter((k) => shown.has(k)).map((k) => tiles[k]).join("");
-    const title = o("hide_title") ? "" : `<h2>${c.title || t.unit}</h2>`;
+    const title = o("hide_title") ? "" : `<h2>${esc(c.title || t.unit)}</h2>`;
     root.innerHTML = `<style>${SHARED_CSS}
       ha-card { container-type: inline-size; }
       svg { width: 100%; height: auto; display: block; margin: 6px 0 2px; }
@@ -443,9 +446,9 @@ class WanasCard extends HTMLElement {
     $("gear").textContent = ROMAN[gear] ?? gear;
     const forced = (input3 && gear === 3) || (input1 && gear === 1);
     $("gearN").textContent = (forced ? `${input3 ? t.input3 : t.input1} · ` : "") + (progSpeed != null ? `${t.program}: ${ROMAN[progSpeed]}` : "");
-    $("flow").innerHTML = `${flowS ?? "—"}<small>m³/h</small>`;
+    $("flow").innerHTML = `${esc(flowS ?? "—")}<small>m³/h</small>`;
     $("flowN").textContent = flowE != null ? `${t.extract} ${flowE}` : "";
-    $("filt").innerHTML = `${filter ?? "—"}<small>${t.days}</small>`;
+    $("filt").innerHTML = `${esc(filter ?? "—")}<small>${t.days}</small>`;
     $("filtN").textContent = filterWarn ? t.replaceNow : t.toReplace;
     $("fbox").classList.toggle("warn", filterWarn);
     $("ov").hidden = !(forced && progSpeed != null && progSpeed !== gear);
@@ -474,7 +477,7 @@ class WanasCard extends HTMLElement {
         : `${max} ${unit === "d" ? t.days : unit}`;
       const b = document.createElement("button");
       b.className = "chip" + (active ? " on" : "");
-      b.innerHTML = `<span class="dot"></span>${t.names[k]} <span class="cd">${shown}</span>`;
+      b.innerHTML = `<span class="dot"></span>${t.names[k]} <span class="cd">${esc(shown)}</span>`;
       b.onclick = () => h.callService("switch", active ? "turn_off" : "turn_on", { entity_id: id });
       timed.append(b);
     }
@@ -484,7 +487,7 @@ class WanasCard extends HTMLElement {
     if (cur && cur.state && !["unknown", "unavailable"].includes(cur.state)) {
       const a = cur.attributes;
       nowEl.hidden = false;
-      nowEl.innerHTML = `${t.now}: <b>${t.period} ${cur.state} · ${a.from}–${a.until} · ${ROMAN[a.speed] ?? a.speed} · ${a.temperature}°</b>`;
+      nowEl.innerHTML = `${t.now}: <b>${t.period} ${esc(cur.state)} · ${esc(a.from)}–${esc(a.until)} · ${esc(ROMAN[a.speed] ?? a.speed)} · ${esc(a.temperature)}°</b>`;
     } else nowEl.hidden = true;
 
     // controller clock: only worth a line when it drifts
@@ -600,7 +603,7 @@ class WanasScheduleCard extends HTMLElement {
 
     let body;
     if (!this._week) {
-      body = `<div class="empty">${this._loading ? t.reading : this._msg || t.reading}</div>`;
+      body = `<div class="empty">${this._loading ? t.reading : esc(this._msg || t.reading)}</div>`;
     } else if (!d) {
       body = `<div class="empty">${t.readFailed}</div>`;
     } else {
@@ -608,8 +611,8 @@ class WanasScheduleCard extends HTMLElement {
         const [a, b] = this._bounds(d, i);
         const hgt = [8, 34, 64, 100][d.speed[i]] ?? 8;
         return `<div class="seg ${i === this._sel ? "sel" : ""}" data-sel="${i}" style="width:${(b - a) / 14.4}%"
-          title="${t.period} ${i + 1}: ${hm(a)}–${hm(b)}, ${ROMAN[d.speed[i]]}, ${d.temp[i]}°">
-          <span class="tp" style="bottom:calc(${hgt}% + 3px)">${d.temp[i]}°</span>
+          title="${t.period} ${i + 1}: ${hm(a)}–${hm(b)}, ${ROMAN[d.speed[i]]}, ${esc(d.temp[i])}°">
+          <span class="tp" style="bottom:calc(${hgt}% + 3px)">${esc(d.temp[i])}°</span>
           <div class="bar" style="height:${hgt}%; background:${speedColor(d.speed[i])}"></div></div>`;
       }).join("");
       const rows = [0, 1, 2, 3, 4].map((i) => {
@@ -619,8 +622,8 @@ class WanasScheduleCard extends HTMLElement {
           : `<span class="step"><button data-a="u-" data-i="${i}">−</button><span class="tm">${hm(b)}</span><button data-a="u+" data-i="${i}">+</button></span>`;
         const speed = ro ? `<span class="tm">${ROMAN[d.speed[i]]}</span>`
           : `<span class="sg">${[0, 1, 2, 3].map((s) => `<button data-a="s" data-i="${i}" data-v="${s}" class="${d.speed[i] === s ? "on" : ""}">${ROMAN[s]}</button>`).join("")}</span>`;
-        const temp = ro ? `<span class="tm">${d.temp[i]}°</span>`
-          : `<span class="step"><button data-a="t-" data-i="${i}" ${d.temp[i] <= 10 ? "disabled" : ""}>−</button><span class="tm">${d.temp[i]}°</span><button data-a="t+" data-i="${i}" ${d.temp[i] >= 30 ? "disabled" : ""}>+</button></span>`;
+        const temp = ro ? `<span class="tm">${esc(d.temp[i])}°</span>`
+          : `<span class="step"><button data-a="t-" data-i="${i}" ${d.temp[i] <= 10 ? "disabled" : ""}>−</button><span class="tm">${esc(d.temp[i])}°</span><button data-a="t+" data-i="${i}" ${d.temp[i] >= 30 ? "disabled" : ""}>+</button></span>`;
         return `<tr class="${i === this._sel ? "sel" : ""}"><td class="n">${i + 1}</td><td class="c-from"><span class="tm ${i === 0 ? "fx" : ""}">${hm(a)}</span></td><td>${until}</td><td>${speed}</td><td>${temp}</td></tr>`;
       }).join("");
       const also = [0, 1, 2, 3, 4, 5, 6].filter((i) => i !== this._day)
@@ -637,11 +640,11 @@ class WanasScheduleCard extends HTMLElement {
           <div class="ax"><span style="left:0">00</span><span style="left:25%">06</span><span style="left:50%">12</span><span style="left:75%">18</span><span style="left:100%">24</span></div>
         </div>` : ""}
         ${o("show_table") ? `<table><thead><tr><th></th><th class="c-from">${t.from}</th><th>${t.to}</th><th>${t.speed}</th><th>${t.temp}</th></tr></thead><tbody>${rows}</tbody></table>` : ""}
-        <div class="msg" role="status">${this._msg}</div>
+        <div class="msg" role="status">${esc(this._msg)}</div>
         ${ro || !o("show_table") ? "" : `<div class="apply"><span>${t.applyAlso}</span>${also}</div>
         <div class="act"><button class="btn" id="undo" ${this._dirty(this._day) ? "" : "disabled"}>${t.undo}</button>
           <button class="btn pri" id="save" ${changed ? "" : "disabled"}>${t.save(this._also.size + 1, t.dayLong[this._day])}</button></div>
-        <div class="toast">${this._toast}</div>`}
+        <div class="toast">${esc(this._toast)}</div>`}
         ${o("show_week") ? `<div class="label">${t.week}</div><div class="week">${week}</div>` : ""}`;
     }
 
@@ -710,7 +713,7 @@ class WanasScheduleCard extends HTMLElement {
       @container (max-width: 400px) { .c-from { display: none; } }
     </style>
     <ha-card>
-      <div class="head">${o("hide_title") ? "" : `<h2>${this._config.title || t.schedule}</h2>`}${o("show_reload") ? `<span class="sub"><button id="reload">${t.readFromUnit}</button></span>` : ""}</div>
+      <div class="head">${o("hide_title") ? "" : `<h2>${esc(this._config.title || t.schedule)}</h2>`}${o("show_reload") ? `<span class="sub"><button id="reload">${t.readFromUnit}</button></span>` : ""}</div>
       <div class="days">${days}</div>
       <div class="scroll">${body}</div>
     </ha-card>`;

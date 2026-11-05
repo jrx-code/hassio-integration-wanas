@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import ctypes
 import logging
+from collections import deque
 from datetime import datetime, timedelta
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -104,6 +106,9 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         # to decide when to start over with a new socket.
         self.failed_polls = 0
         self.last_poll_success: datetime | None = None
+        # Cleared at the start of every poll; every read/write appends an entry
+        # so diagnostics show what actually happened on the bus this cycle.
+        self.bus_log: deque[dict[str, Any]] = deque(maxlen=200)
 
         # Build effective register map: defaults overridden by user options
         defaults = get_default_registers()
@@ -139,6 +144,27 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
     def has_feature(self, feature: str | None) -> bool:
         """Whether an entity's optional module is present. Untagged entities always are."""
         return feature is None or self.features.get(feature, True)
+
+    def _append_bus_log(
+        self,
+        op: str,
+        address: int,
+        *,
+        count: int = 1,
+        ok: bool,
+        error: str | None = None,
+    ) -> None:
+        """Record one Modbus exchange for diagnostics (caller holds the bus lock)."""
+        entry: dict[str, Any] = {
+            "op": op,
+            "address": address,
+            "count": count,
+            "ok": ok,
+        }
+        if error is not None:
+            entry["error"] = error
+        self.bus_log.append(entry)
+
 
     def _create_client(self) -> AsyncModbusTcpClient | AsyncModbusUdpClient:
         """Create a Modbus client based on protocol selection."""
@@ -182,14 +208,24 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         self, client: AsyncModbusTcpClient | AsyncModbusUdpClient, address: int, count: int
     ) -> list[int]:
         """Read holding registers and return values."""
-        async with asyncio.timeout(BUS_TIMEOUT):
-            result = await client.read_holding_registers(
-                address=address, count=count, device_id=self.slave_id
+        try:
+            async with asyncio.timeout(BUS_TIMEOUT):
+                result = await client.read_holding_registers(
+                    address=address, count=count, device_id=self.slave_id
+                )
+        except Exception as err:
+            self._append_bus_log(
+                "read", address, count=count, ok=False, error=str(err)
             )
+            raise
         if result.isError():
+            self._append_bus_log(
+                "read", address, count=count, ok=False, error=str(result)
+            )
             raise UpdateFailed(
                 f"Error reading registers at address {address}: {result}"
             )
+        self._append_bus_log("read", address, count=count, ok=True)
         return result.registers
 
     async def _async_update_data(self) -> dict[int, int]:
@@ -212,6 +248,7 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
     async def _poll(self) -> dict[int, int]:
         """Read every register block once."""
         async with self._bus:
+            self.bus_log.clear()
             try:
                 client = await self._get_client()
             except UpdateFailed:
@@ -274,6 +311,7 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
                     address=address, value=value, device_id=self.slave_id
                 )
         except Exception as err:
+            self._append_bus_log("write", address, ok=False, error=str(err))
             self._drop_client()
             raise HomeAssistantError(
                 f"Wanas: writing register {address} failed: {err}"
@@ -283,9 +321,11 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
             # The device refused the write - a read-only register or a value out of
             # range. That is a bad request, not a broken connection, so the client
             # stays open and the user gets told what happened.
+            self._append_bus_log("write", address, ok=False, error=str(result))
             raise HomeAssistantError(
                 f"Wanas: device rejected the write of {value} to register {address}: {result}"
             )
+        self._append_bus_log("write", address, ok=True)
 
     async def _read_locked(self, address: int, count: int) -> list[int]:
         """Read holding registers for a service call. The caller must hold the bus lock."""
@@ -296,14 +336,21 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
                     address=address, count=count, device_id=self.slave_id
                 )
         except Exception as err:
+            self._append_bus_log(
+                "read", address, count=count, ok=False, error=str(err)
+            )
             self._drop_client()
             raise HomeAssistantError(
                 f"Wanas: reading registers {address}-{address + count - 1} failed: {err}"
             ) from err
         if result.isError():
+            self._append_bus_log(
+                "read", address, count=count, ok=False, error=str(result)
+            )
             raise HomeAssistantError(
                 f"Wanas: device rejected the read of registers {address}-{address + count - 1}: {result}"
             )
+        self._append_bus_log("read", address, count=count, ok=True)
         return list(result.registers)
 
     async def async_write_register(self, address: int, value: int) -> None:

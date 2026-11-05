@@ -14,7 +14,7 @@
  * restart the airflow animation each time.
  */
 
-const VERSION = "4.0.1";
+const VERSION = "4.0.2";
 // Escapes a value for an innerHTML template: config strings, entity states and error text
 // must never be read as markup.
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);

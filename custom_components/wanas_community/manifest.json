@@ -5,6 +5,9 @@
     "frontend",
     "http"
   ],
+  "categories": [
+    "climate.fans_ventilation"
+  ],
   "codeowners": [
     "@jrx-code"
   ],
@@ -19,5 +22,5 @@
   "requirements": [
     "pymodbus>=3.10.0"
   ],
-  "version": "4.0.1"
+  "version": "4.0.2"
 }

@@ -218,3 +218,42 @@ async def test_repeated_failed_polls_start_a_new_connection(
     await coordinator.async_refresh()
     assert coordinator.last_update_success is True
     assert coordinator.failed_polls == 0
+
+
+async def test_rejected_week_read_marks_schedule_unsupported(
+    hass: HomeAssistant, config_entry, mock_client, caplog
+) -> None:
+    """A Modbus exception on register 8 stops further daily week reads after one warning."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = config_entry.runtime_data
+
+    assert coordinator.week is not None
+    assert coordinator.week_unsupported is False
+
+    refused = MagicMock()
+    refused.isError.return_value = True
+
+    async def read(address, count, device_id):  # noqa: ARG001
+        from .conftest import _read_result
+
+        if address == 8:
+            return refused
+        return _read_result(count, address)
+
+    mock_client.read_holding_registers = AsyncMock(side_effect=read)
+    mock_client.write_register.reset_mock()
+
+    with caplog.at_level("WARNING"):
+        assert await coordinator.async_refresh_week() is False
+
+    assert coordinator.week_unsupported is True
+    assert coordinator.week is None
+    assert any("weekly schedule not supported" in rec.message for rec in caplog.records)
+
+    mock_client.read_holding_registers.reset_mock()
+    mock_client.write_register.reset_mock()
+    assert await coordinator.async_refresh_week() is False
+    mock_client.read_holding_registers.assert_not_called()
+    mock_client.write_register.assert_not_called()

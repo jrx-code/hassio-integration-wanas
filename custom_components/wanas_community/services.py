@@ -131,6 +131,10 @@ async def _get_schedule(call: ServiceCall) -> ServiceResponse:
 
 async def _set_schedule(call: ServiceCall) -> None:
     coordinator = _coordinator(call.hass, call)
+    if coordinator.week_unsupported:
+        raise HomeAssistantError(
+            "Wanas: weekly schedule is not supported by this controller"
+        )
     periods: list[dict[str, int]] = call.data[ATTR_PERIODS]
     values: dict[int, int] = {}
     for index, period in enumerate(periods):

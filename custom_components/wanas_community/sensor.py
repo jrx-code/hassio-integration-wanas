@@ -30,7 +30,7 @@ from .const import (
     WanasSensorDescription,
 )
 from .coordinator import WanasCoordinator
-from .entity import device_info, device_key
+from .entity import device_info, device_key, schedule_entity_available
 from .recovery import Recovery, compute
 from .schedule import DAY_MINUTES, day_periods, summary
 
@@ -151,6 +151,11 @@ class WanasScheduleSensor(CoordinatorEntity[WanasCoordinator], SensorEntity):
         self._attr_unique_id = f"{device_key(entry)}_schedule_summary"
         self._attr_device_info = device_info(entry)
 
+    @property
+    def available(self) -> bool:
+        """Schedule summary needs registers 8 / 10-23."""
+        return schedule_entity_available(self.coordinator, super().available)
+
     def _periods(self) -> list[dict] | None:
         data = self.coordinator.data
         addresses = range(SCHEDULE_FIRST_ADDRESS, SCHEDULE_FIRST_ADDRESS + SCHEDULE_REGISTER_COUNT)
@@ -192,6 +197,11 @@ class WanasCurrentPeriodSensor(CoordinatorEntity[WanasCoordinator], SensorEntity
         super().__init__(coordinator)
         self._attr_unique_id = f"{device_key(entry)}_current_period"
         self._attr_device_info = device_info(entry)
+
+    @property
+    def available(self) -> bool:
+        """Current period comes from the week cache."""
+        return schedule_entity_available(self.coordinator, super().available)
 
     def _now(self) -> tuple[str, dict] | None:
         week = self.coordinator.week

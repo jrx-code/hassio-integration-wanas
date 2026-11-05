@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import SCHEDULE_DAY_ADDRESS, SCHEDULE_DAYS
 from .coordinator import WanasCoordinator
-from .entity import device_info, device_key
+from .entity import device_info, device_key, schedule_entity_available
 
 # Writes share one RS485 bus, so let Home Assistant serialise service calls.
 PARALLEL_UPDATES = 1
@@ -44,6 +44,11 @@ class WanasProgramDaySelect(CoordinatorEntity[WanasCoordinator], SelectEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{device_key(entry)}_program_day"
         self._attr_device_info = device_info(entry)
+
+    @property
+    def available(self) -> bool:
+        """Hide the day selector when the controller has no weekly schedule."""
+        return schedule_entity_available(self.coordinator, super().available)
 
     @property
     def current_option(self) -> str | None:

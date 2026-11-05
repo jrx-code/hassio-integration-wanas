@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_ON, EntityCategory
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import SWITCH_DESCRIPTIONS, WanasSwitchDescription
@@ -17,6 +21,9 @@ from .entity import device_info, device_key
 # Writes share one RS485 bus, so let Home Assistant serialise service calls.
 PARALLEL_UPDATES = 1
 
+_AUTO_SYNC_INTERVAL = timedelta(minutes=5)
+_AUTO_SYNC_DRIFT_SECONDS = 60
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -25,11 +32,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Wanas switch entities."""
     coordinator: WanasCoordinator = entry.runtime_data
-    async_add_entities(
+    entities: list[SwitchEntity] = [
         WanasSwitch(coordinator, entry, desc)
         for desc in SWITCH_DESCRIPTIONS
         if coordinator.has_feature(desc.feature)
-    )
+    ]
+    entities.append(WanasAutoSyncClockSwitch(coordinator, entry))
+    async_add_entities(entities)
 
 
 class WanasSwitch(CoordinatorEntity[WanasCoordinator], SwitchEntity):
@@ -91,4 +100,66 @@ class WanasSwitch(CoordinatorEntity[WanasCoordinator], SwitchEntity):
         """Turn the switch off."""
         await self.coordinator.async_write_register(
             self._write_address, self._description.off_value
+        )
+
+
+class WanasAutoSyncClockSwitch(SwitchEntity, RestoreEntity):
+    """Opt-in periodic correction of the controller clock from Home Assistant time."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "auto_sync_clock"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_should_poll = False
+
+    def __init__(self, coordinator: WanasCoordinator, entry: ConfigEntry) -> None:
+        """Initialize the auto-sync switch (off until restored or turned on)."""
+        self.coordinator = coordinator
+        self._attr_unique_id = f"{device_key(entry)}_auto_sync_clock"
+        self._attr_device_info = device_info(entry)
+        self._attr_is_on = False
+        self._unsub = None
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the previous on/off state and restart the interval when it was on."""
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        if last is not None and last.state == STATE_ON:
+            self._attr_is_on = True
+            self._start_interval()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel the periodic task when the entity goes away."""
+        self._stop_interval()
+        await super().async_will_remove_from_hass()
+
+    def _start_interval(self) -> None:
+        if self._unsub is not None:
+            return
+        self._unsub = async_track_time_interval(
+            self.hass, self._async_check_clock, _AUTO_SYNC_INTERVAL
+        )
+
+    def _stop_interval(self) -> None:
+        if self._unsub is not None:
+            self._unsub()
+            self._unsub = None
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable periodic clock checks."""
+        self._attr_is_on = True
+        self._start_interval()
+        self.async_write_ha_state()
+        await self.coordinator.async_sync_clock_if_drifted(_AUTO_SYNC_DRIFT_SECONDS)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable periodic clock checks."""
+        self._attr_is_on = False
+        self._stop_interval()
+        self.async_write_ha_state()
+
+    @callback
+    def _async_check_clock(self, _now=None) -> None:
+        """Schedule a drift check on the HA loop (interval callback is sync)."""
+        self.hass.async_create_task(
+            self.coordinator.async_sync_clock_if_drifted(_AUTO_SYNC_DRIFT_SECONDS)
         )

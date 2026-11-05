@@ -20,7 +20,7 @@ from .conftest import ALL_MODULES, CONNECTION
 # 47 register entities, 4 period-until times, the controller clock, schedule summary
 # and current period sensors, three heat recovery sensors, the schedule day select and
 # the clock button.
-FULL_SET = 59
+FULL_SET = 60
 COOLER_ENTITIES = 3
 HUMIDIFIER_ENTITIES = 2
 MAXICONTROL_ENTITIES = 6

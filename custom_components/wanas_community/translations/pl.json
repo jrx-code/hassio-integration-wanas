@@ -317,6 +317,9 @@
       },
       "party_switch": {
         "name": "Impreza (12 h)"
+      },
+      "auto_sync_clock": {
+        "name": "Automatyczna synchronizacja czasu i daty"
       }
     },
     "number": {

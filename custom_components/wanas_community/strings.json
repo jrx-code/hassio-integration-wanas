@@ -317,6 +317,9 @@
       },
       "party_switch": {
         "name": "Party (12 h)"
+      },
+      "auto_sync_clock": {
+        "name": "Automatic time and date sync"
       }
     },
     "number": {

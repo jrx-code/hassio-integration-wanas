@@ -16,9 +16,12 @@ from homeassistant.util import dt as dt_util
 from pymodbus.client import AsyncModbusTcpClient, AsyncModbusUdpClient
 from pymodbus.framer import FramerType
 
+from .clock import decode_clock, encode_clock
 from .const import (
     ALWAYS_READ_ADDRESSES,
     BUS_TIMEOUT,
+    CLOCK_DATE_ADDRESS,
+    CLOCK_TIME_ADDRESS,
     CONF_PROTOCOL,
     CONF_REGISTERS,
     CONF_SCAN_INTERVAL,
@@ -365,6 +368,33 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
                     program[address - SCHEDULE_FIRST_ADDRESS] = value
                 self.week[day] = program
         await self.async_request_refresh()
+
+
+    async def async_sync_clock_if_drifted(self, threshold_seconds: int = 60) -> bool:
+        """Read registers 50/51; write HA local time when |drift| exceeds threshold.
+
+        Holds the bus lock for the whole check-and-correct so a week read cannot
+        interleave. Returns True when a correction was written.
+        """
+        now = dt_util.now()
+        async with self._bus:
+            date_value, time_value = await self._read_locked(CLOCK_DATE_ADDRESS, 2)
+            controller = decode_clock(date_value, time_value, now.tzinfo)
+            if controller is None:
+                return False
+            drift = abs((now - controller).total_seconds())
+            if drift <= threshold_seconds:
+                return False
+            new_date, new_time = encode_clock(now)
+            await self._write_locked(CLOCK_DATE_ADDRESS, new_date)
+            await self._write_locked(CLOCK_TIME_ADDRESS, new_time)
+
+        if self.data is not None:
+            self.async_set_updated_data(
+                {**self.data, CLOCK_DATE_ADDRESS: new_date, CLOCK_TIME_ADDRESS: new_time}
+            )
+        await self.async_request_refresh()
+        return True
 
     async def async_close(self) -> None:
         """Close the Modbus client connection."""

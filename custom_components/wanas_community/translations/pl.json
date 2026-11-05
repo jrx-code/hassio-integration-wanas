@@ -291,6 +291,9 @@
       },
       "input_fire_alarm": {
         "name": "Wejście przeciwpożarowe"
+      },
+      "connection_status": {
+        "name": "Stan połączenia"
       }
     },
     "switch": {

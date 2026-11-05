@@ -291,6 +291,9 @@
       },
       "input_fire_alarm": {
         "name": "Fire alarm input"
+      },
+      "connection_status": {
+        "name": "Connection status"
       }
     },
     "switch": {

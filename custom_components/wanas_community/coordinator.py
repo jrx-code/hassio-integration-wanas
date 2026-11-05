@@ -43,6 +43,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+class WanasModbusRejected(HomeAssistantError):
+    """The controller returned a Modbus exception for this request."""
+
+
+
 def _build_read_blocks(
     addresses: list[int], max_gap: int = 3, max_block: int = MAX_READ_BLOCK
 ) -> list[tuple[int, int]]:
@@ -100,6 +105,8 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         # step with each poll for the day register 8 selects and with every schedule
         # write, so it is re-read from the bus only at start-up and once a day.
         self.week: dict[int, list[int]] | None = None
+        # Set when register 8 or 10-23 is rejected; stops further week reads.
+        self.week_unsupported = False
         # Polls that failed in a row, and when one last succeeded, for diagnostics and
         # to decide when to start over with a new socket.
         self.failed_polls = 0
@@ -255,9 +262,24 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
         A week read writes register 8 seven times. Whether the unit keeps that
         register in EEPROM is not documented, so this runs at start-up and once a
         day rather than on every poll or every time a dashboard opens.
+
+        If the controller rejects register 8 or 10-23, remember that and skip all
+        further week reads (including the daily 03:17 pass) after one warning.
         """
+        if self.week_unsupported:
+            return False
         try:
             week = await self.async_read_week()
+        except WanasModbusRejected as err:
+            self.week_unsupported = True
+            self.week = None
+            _LOGGER.warning(
+                "Wanas: weekly schedule not supported by this controller (%s); "
+                "skipping further week reads",
+                err,
+            )
+            self.async_update_listeners()
+            return False
         except HomeAssistantError as err:
             _LOGGER.warning("Wanas: could not read the weekly schedule: %s", err)
             return False
@@ -283,7 +305,7 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
             # The device refused the write - a read-only register or a value out of
             # range. That is a bad request, not a broken connection, so the client
             # stays open and the user gets told what happened.
-            raise HomeAssistantError(
+            raise WanasModbusRejected(
                 f"Wanas: device rejected the write of {value} to register {address}: {result}"
             )
 
@@ -301,7 +323,7 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
                 f"Wanas: reading registers {address}-{address + count - 1} failed: {err}"
             ) from err
         if result.isError():
-            raise HomeAssistantError(
+            raise WanasModbusRejected(
                 f"Wanas: device rejected the read of registers {address}-{address + count - 1}: {result}"
             )
         return list(result.registers)
@@ -349,15 +371,29 @@ class WanasCoordinator(DataUpdateCoordinator[dict[int, int]]):
 
     async def async_write_schedule(self, days: list[int], values: dict[int, int]) -> None:
         """Write program registers (10-23) for the given days, restoring the selector."""
-        async with self._bus:
-            (selected,) = await self._read_locked(SCHEDULE_DAY_ADDRESS, 1)
-            try:
-                for day in days:
-                    await self._write_locked(SCHEDULE_DAY_ADDRESS, day)
-                    for address, value in values.items():
-                        await self._write_locked(address, value)
-            finally:
-                await self._write_locked(SCHEDULE_DAY_ADDRESS, selected)
+        if self.week_unsupported:
+            raise HomeAssistantError(
+                "Wanas: weekly schedule is not supported by this controller"
+            )
+        try:
+            async with self._bus:
+                (selected,) = await self._read_locked(SCHEDULE_DAY_ADDRESS, 1)
+                try:
+                    for day in days:
+                        await self._write_locked(SCHEDULE_DAY_ADDRESS, day)
+                        for address, value in values.items():
+                            await self._write_locked(address, value)
+                finally:
+                    await self._write_locked(SCHEDULE_DAY_ADDRESS, selected)
+        except WanasModbusRejected:
+            self.week_unsupported = True
+            self.week = None
+            _LOGGER.warning(
+                "Wanas: weekly schedule not supported by this controller; "
+                "skipping further week reads"
+            )
+            self.async_update_listeners()
+            raise
         if self.week is not None:
             for day in days:
                 program = list(self.week.get(day, [0] * SCHEDULE_REGISTER_COUNT))

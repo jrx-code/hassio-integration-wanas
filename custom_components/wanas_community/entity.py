@@ -35,3 +35,8 @@ def device_info(entry: ConfigEntry) -> DeviceInfo:
         configuration_url=f"http://{host}" if host else None,
         serial_number=f"{host}:{port}:{slave}" if host else None,
     )
+
+
+def schedule_entity_available(coordinator: object, base_available: bool) -> bool:
+    """Schedule entities stay unavailable once the controller rejected the week read."""
+    return base_available and not getattr(coordinator, "week_unsupported", False)

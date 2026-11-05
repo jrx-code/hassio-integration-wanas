@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import SCHEDULE_PERIOD_UNTIL_ADDRESSES
 from .coordinator import WanasCoordinator
-from .entity import device_info, device_key
+from .entity import device_info, device_key, schedule_entity_available
 from .schedule import DAY_MINUTES, boundary_error, format_minutes
 
 # Writes share one RS485 bus, so let Home Assistant serialise service calls.
@@ -52,6 +52,11 @@ class WanasPeriodUntil(CoordinatorEntity[WanasCoordinator], TimeEntity):
         self._attr_unique_id = f"{device_key(entry)}_period_{period}_until"
         self._attr_translation_key = f"period_{period}_until"
         self._attr_device_info = device_info(entry)
+
+    @property
+    def available(self) -> bool:
+        """Period boundaries need a working weekly schedule."""
+        return schedule_entity_available(self.coordinator, super().available)
 
     @property
     def native_value(self) -> time | None:

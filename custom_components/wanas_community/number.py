@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import NUMBER_DESCRIPTIONS, WanasNumberDescription
 from .coordinator import WanasCoordinator
-from .entity import device_info, device_key
+from .entity import device_info, device_key, schedule_entity_available
 from .schedule import bounds, format_minutes
 
 # The fan speed of schedule period N carries that period's from/until, so a dashboard
@@ -66,6 +66,14 @@ class WanasNumber(CoordinatorEntity[WanasCoordinator], NumberEntity):
         self._attr_native_unit_of_measurement = description.unit
         self._attr_entity_category = description.entity_category
         self._attr_device_info = device_info(entry)
+
+    @property
+    def available(self) -> bool:
+        """Zone schedule numbers need a controller that accepts the week read."""
+        base = super().available
+        if self._description.key.startswith("zone_"):
+            return schedule_entity_available(self.coordinator, base)
+        return base
 
     @property
     def _write_address(self) -> int:
